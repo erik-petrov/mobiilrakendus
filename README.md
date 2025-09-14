@@ -22,7 +22,7 @@ Additional features include the ability to add photos to notes, either from the 
 
    Lead Developer / Builder: Erik Petrov
 
-   Presenter: Jurii Tsõmbaluk
+   Presenter: Jüri Tsõmbaljuk
 
 - **Planned features:**
 1. **Data & Persistence:** Support for both cloud storage and a local database (selectable by the user and expandable depending on the plan).
