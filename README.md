@@ -33,5 +33,5 @@ Additional features include the ability to add photos to notes, either from the 
 
  - **Mockup:**
    ![](images_step1/step1_mockup1.jpg)
-   ![](images_step1/step1_mockup2.jpg)
+   ![](images_step1/step1_mockup3.jpg)
  - **License file (optional but recommended, e.g., MIT License)**
