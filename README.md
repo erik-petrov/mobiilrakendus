@@ -14,18 +14,18 @@ Additional features include the ability to add photos to notes, either from the 
 
 - **Team members and roles:**
 
- - Project Leader / Manager: Milissa Laane
- - Researcher: Daria Savtšenko
- - Editor: Elisabeth Serikova
- - Lead Developer / Builder: Erik Petrov
- - Presenter: Jurii Tsõmbaluk
+   Project Leader / Manager: Milissa Laane
+   Researcher: Daria Savtšenko
+   Editor: Elisabeth Serikova
+   Lead Developer / Builder: Erik Petrov
+   Presenter: Jurii Tsõmbaluk
 
 - **Planned features:**
-  1. **Data & Persistence:** Support for both cloud storage and a local database (selectable by the user or dependent on their purchased subscription plan).
-    2. **UI & Navigation:** **Multi-Activity Design:** A multi-screen app with a main calendar view, individual folder/schedule pages, a task creation/edit screen and a settings screen.
-    3. **API Integration (Device Notifications API):** Integration with the Android System Notification API to schedule and trigger time-based reminders (honking notifications).
-    4. **System Integration (Camera & Media Storage):** Feature to add photos to notes either by taking a picture using the device's camera or by selecting an image from the gallery.
-    5. **Tools & frameworks (Kotlin, Android Studio, Room DB, Retrofit,Jetpack Compose/XML, etc.):**
+1. **Data & Persistence:** Support for both cloud storage and a local database (selectable by the user and expandable depending on the plan).
+2. **UI & Navigation:** **Multi-Activity Design:** A multi-screen app with a main calendar view, individual folder/schedule pages, a task creation/edit screen and a settings screen.
+3. **API Integration (Device Notifications API):** Integration with the Android System Notification API to schedule and trigger time-based reminders (honking notifications).
+4. **System Integration (Camera & Media Storage):** Feature to add photos to notes either by taking a picture using the device's camera or by selecting an image from the gallery.
+5. **Tools & frameworks (Kotlin, Android Studio, Room DB, Retrofit,Jetpack Compose/XML, etc.):**
 
  - **Mockup:**
  - **License file (optional but recommended, e.g., MIT License)**
