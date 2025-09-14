@@ -4,7 +4,7 @@
 
 **HONK!**
 
-A to-do list and scheduling app with a unique goose-themed design. The app focuses on organization through folder sorting, reminders with pop-up notifications, and an integrated calendar.
+A to-do list and scheduling app with a goose-themed design. The app focuses on organization through folder sorting, reminders with pop-up notifications and an integrated calendar.
 
 Users can create detailed schedules for various aspects of their life, such as study plans or plant watering routines. The app allows for custom advanced notifications (e.g., 24 hours and 6 hours before an event, 3 days before an exam, or 15 minutes before medication).
 
