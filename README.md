@@ -32,5 +32,5 @@ Additional features include the ability to add photos to notes, either from the 
 5. **Tools & frameworks (Kotlin, Android Studio, Room DB, Retrofit,Jetpack Compose/XML, etc.):**
 
  - **Mockup:**
-(images_step1/step1_mockup1.jpg)
+   ![](images_step1/step1_mockup1.jpg)
  - **License file (optional but recommended, e.g., MIT License)**
