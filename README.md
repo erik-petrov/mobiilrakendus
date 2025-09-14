@@ -15,9 +15,13 @@ Additional features include the ability to add photos to notes, either from the 
 - **Team members and roles:**
 
    Project Leader / Manager: Milissa Laane
+  
    Researcher: Daria Savtšenko
+
    Editor: Elisabeth Serikova
+
    Lead Developer / Builder: Erik Petrov
+
    Presenter: Jurii Tsõmbaluk
 
 - **Planned features:**
