@@ -29,11 +29,12 @@ Additional features include the ability to add photos to notes, either from the 
 - **Planned features:**
 1. **Data & Persistence:** Support for both cloud storage and a local database (selectable by the user and expandable depending on the plan).
 2. **UI & Navigation:** **Multi-Activity Design:** A multi-screen app with a main calendar view, individual folder/schedule pages, a task creation/edit screen and a settings screen.
-3. **API Integration (Device Notifications API):** Integration with the Android System Notification API to schedule and trigger time-based reminders (honking notifications). **Location-Based Services:** Using the device's GPS to create features that interact with the user's physical location (e.g., context-aware reminders).
-4. **System Integration (Camera & Media Storage):** Feature to add photos to notes either by taking a picture using the device's camera or by selecting an image from the gallery.
-5. **Tools & frameworks (Kotlin, Android Studio, Room DB, Retrofit,Jetpack Compose/XML, etc.):**
+3. **API Integration (Device Notifications API):** Integration with the Android System Notification API to schedule and trigger time-based reminders (honking notifications).
+4. **Location-Based Services:** Using the device's GPS to create features that interact with the user's physical location (e.g., context-aware reminders).
+5. **System Integration (Camera & Media Storage):** Feature to add photos to notes either by taking a picture using the device's camera or by selecting an image from the gallery.
+6. **Tools & frameworks: Kotlin, Android Studio, Room DB, Retrofit,Jetpack Compose/XML**
 
  - **Mockup:**
    ![](images_step1/step1_mockup1.jpg)
    ![](images_step1/step1_mockup2.jpg)
- - **License file (optional but recommended, e.g., MIT License)**
+ - **License file**
