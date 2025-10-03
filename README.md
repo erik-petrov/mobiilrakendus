@@ -32,7 +32,7 @@ Additional features include the ability to add photos to notes, either from the 
 3. **API Integration (Device Notifications API):** Integration with the Android System Notification API to schedule and trigger time-based reminders (honking notifications).
 4. **Location-Based Services:** Using the device's GPS to create features that interact with the user's physical location (e.g., context-aware reminders).
 5. **System Integration (Camera & Media Storage):** Feature to add photos to notes either by taking a picture using the device's camera or by selecting an image from the gallery.
-6. **Tools & frameworks: Kotlin, Android Studio, Room DB, Retrofit,Jetpack Compose/XML**
+6. **Tools & frameworks: Kotlin, Android Studio, Room DB, Retrofit, Jetpack Compose/XML**
 
  - **Mockup:**
    ![](images_step1/step1_mockup1.jpg)
