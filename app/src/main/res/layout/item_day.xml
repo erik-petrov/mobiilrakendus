@@ -1,0 +1,9 @@
+<TextView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/dayText"
+    android:layout_width="match_parent"
+    android:layout_height="48dp"
+    android:gravity="center"
+    android:textSize="16sp"
+    android:textStyle="bold"
+    android:background="@drawable/day_cell_bg"
+    android:text="15"/>
