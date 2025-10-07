@@ -51,4 +51,15 @@ dependencies {
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
+
+    // Room Database
+    implementation("androidx.room:room-runtime:2.6.0")
+    implementation("androidx.room:room-compiler:2.6.0")
+    implementation("androidx.room:room-ktx:2.6.0")
+
+    // Gson for JSON convertion
+    implementation("com.google.code.gson:gson:2.10.1")
+
+    // Coroutines
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.1")
 }
