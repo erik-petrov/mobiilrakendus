@@ -19,5 +19,6 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "HONK!"
+rootProject.name = "HONK"
 include(":app")
+

@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="20dp"
+    android:background="@drawable/filter_dialog_bg">
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="All themes"
+        android:textStyle="bold"
+        android:textSize="20sp"
+        android:gravity="center"
+        android:layout_marginBottom="16dp"/>
+
+    <CheckBox
+        android:id="@+id/checkAll"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="All themes"
+        android:checked="true"/>
+
+    <CheckBox
+        android:id="@+id/checkWork"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="WORK"
+        android:textColor="#03A9F4"
+        android:textStyle="bold"/>
+
+    <CheckBox
+        android:id="@+id/checkPet"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="PET"
+        android:textColor="#F44336"
+        android:textStyle="bold"/>
+
+    <CheckBox
+        android:id="@+id/checkSchool"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="SCHOOL"
+        android:textColor="#4CAF50"
+        android:textStyle="bold"/>
+
+    <CheckBox
+        android:id="@+id/checkHome"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="HOME"
+        android:textColor="#9C27B0"
+        android:textStyle="bold"/>
+
+</LinearLayout>

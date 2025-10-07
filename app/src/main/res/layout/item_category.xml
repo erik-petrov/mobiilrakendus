@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/categoryCard"
+    android:layout_width="match_parent"
+    android:layout_height="100dp"
+    android:layout_margin="8dp"
+    android:background="@color/category_blue"
+    android:gravity="center"
+    android:orientation="vertical"
+    android:padding="12dp"
+    android:backgroundTintMode="src_in"
+    android:elevation="3dp"
+    android:layout_weight="1"
+    android:clickable="true"
+    android:focusable="true">
+
+    <TextView
+        android:id="@+id/categoryNameText"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="SCHOOL"
+        android:textColor="@android:color/white"
+        android:textStyle="bold"
+        android:textSize="20sp" />
+</LinearLayout>
