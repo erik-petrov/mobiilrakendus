@@ -149,6 +149,8 @@ class CategoriesFragment : Fragment() {
         inner class ReminderViewHolder(view: View) : RecyclerView.ViewHolder(view) {
             val checkBox: CheckBox = view.findViewById(R.id.noteCheckBox)
             val text: TextView = view.findViewById(R.id.noteText)
+            val editButton: ImageButton = view.findViewById(R.id.editNoteButton)
+            val deleteButton: ImageButton = view.findViewById(R.id.deleteNoteButton)
         }
 
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ReminderViewHolder {
@@ -165,11 +167,58 @@ class CategoriesFragment : Fragment() {
             holder.checkBox.setOnCheckedChangeListener { _, isChecked ->
                 reminder.isDone = isChecked
             }
+
+            // 📝 Edit button
+            holder.editButton.setOnClickListener {
+                showEditReminderDialog(reminder, position)
+            }
+
+            // 🗑️ Delete button
+            holder.deleteButton.setOnClickListener {
+                AlertDialog.Builder(requireContext())
+                    .setTitle("Delete note?")
+                    .setMessage("Remove this note from ${reminder.category}?")
+                    .setPositiveButton("Delete") { _, _ ->
+                        reminders.removeAt(position)
+                        notifyItemRemoved(position)
+                    }
+                    .setNegativeButton("Cancel", null)
+                    .show()
+            }
         }
 
         override fun getItemCount() = reminders.size
     }
 
+    private fun showEditReminderDialog(reminder: Reminder, position: Int) {
+        val dialogView = layoutInflater.inflate(R.layout.dialog_add_note, null)
+        val noteText = dialogView.findViewById<EditText>(R.id.noteText)
+        val noteDate = dialogView.findViewById<EditText>(R.id.noteDate)
+        val notePriority = dialogView.findViewById<EditText>(R.id.notePriority)
+        val addButton = dialogView.findViewById<Button>(R.id.addNoteButton)
+
+        // Prefill fields
+        noteText.setText(reminder.text)
+        noteDate.setText(reminder.date)
+        notePriority.setText(reminder.priority ?: "")
+
+        addButton.text = "Save Changes"
+
+        val dialog = AlertDialog.Builder(requireContext())
+            .setView(dialogView)
+            .setCancelable(true)
+            .create()
+
+        addButton.setOnClickListener {
+            reminder.text = noteText.text.toString()
+            reminder.date = noteDate.text.toString()
+            reminder.priority = notePriority.text.toString()
+            adapter.notifyItemChanged(position)
+            dialog.dismiss()
+        }
+
+        dialog.show()
+    }
 
     private fun showCategoryDetails(category: Category) {
         val dialogView = layoutInflater.inflate(R.layout.dialog_category_details, null)

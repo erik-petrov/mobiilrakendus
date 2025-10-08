@@ -13,23 +13,26 @@
     <!-- Title -->
     <TextView
         android:id="@+id/categoriesTitle"
-        android:layout_width="wrap_content"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_gravity="center_horizontal"
         android:layout_marginTop="16dp"
         android:text="Categories"
+        android:textAlignment="center"
         android:textAppearance="@style/TextAppearance.Material3.TitleLarge"
         android:textStyle="bold"
-        android:textColor="@color/black" />
+        android:textColor="@color/black"
+        android:paddingVertical="8dp"
+        android:background="@android:color/transparent"/>
 
-    <!-- RecyclerView for categories -->
+    <!-- Scrollable RecyclerView grid -->
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/categoriesRecycler"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_marginTop="64dp"
-        android:padding="16dp"
         android:clipToPadding="false"
+        android:paddingHorizontal="16dp"
+        android:paddingBottom="120dp"
         android:scrollbars="vertical"
         tools:listitem="@layout/item_category" />
 
@@ -44,5 +47,15 @@
         android:src="@drawable/ic_add"
         app:backgroundTint="@color/yellow"
         app:tint="@color/white" />
+
+    <!-- Goose overlay -->
+    <ImageView
+        android:id="@+id/gooseImage"
+        android:layout_width="90dp"
+        android:layout_height="90dp"
+        android:layout_gravity="bottom|center_horizontal"
+        android:layout_marginBottom="70dp"
+        android:src="@drawable/goose_default"
+        android:contentDescription="Goose"/>
 
 </FrameLayout>
