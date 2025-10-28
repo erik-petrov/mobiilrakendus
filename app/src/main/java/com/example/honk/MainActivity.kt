@@ -26,7 +26,8 @@ class MainActivity : AppCompatActivity() {
                 R.id.calendarFragment,
                 R.id.notesFragment,
                 R.id.categoriesFragment,
-                R.id.settingsFragment
+                R.id.settingsFragment,
+                R.id.folderDetailsFragment
             )
         )
 

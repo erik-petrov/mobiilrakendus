@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<FrameLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/calendar_fragment_root"
@@ -21,11 +20,11 @@
             android:id="@+id/topBar"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="horizontal"
             android:gravity="center_vertical"
+            android:orientation="horizontal"
             android:paddingStart="12dp"
-            android:paddingEnd="12dp"
             android:paddingTop="8dp"
+            android:paddingEnd="12dp"
             android:paddingBottom="4dp">
 
             <ImageButton
@@ -33,38 +32,38 @@
                 android:layout_width="40dp"
                 android:layout_height="40dp"
                 android:background="@android:color/transparent"
-                android:src="@drawable/ic_arrow_left"
-                android:contentDescription="@string/previous_month"/>
+                android:contentDescription="@string/previous_month"
+                android:src="@drawable/ic_arrow_left" />
 
             <TextView
                 android:id="@+id/monthLabel"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:layout_marginHorizontal="8dp"
                 android:text="September"
-                android:textStyle="bold"
                 android:textSize="20sp"
-                android:layout_marginHorizontal="8dp"/>
+                android:textStyle="bold" />
 
             <ImageButton
                 android:id="@+id/nextMonthBtn"
                 android:layout_width="40dp"
                 android:layout_height="40dp"
                 android:background="@android:color/transparent"
-                android:src="@drawable/ic_arrow_right"
-                android:contentDescription="@string/next_month"/>
+                android:contentDescription="@string/next_month"
+                android:src="@drawable/ic_arrow_right" />
 
             <View
                 android:layout_width="0dp"
                 android:layout_height="0dp"
-                android:layout_weight="1"/>
+                android:layout_weight="1" />
 
             <ImageButton
                 android:id="@+id/filterButton"
                 android:layout_width="40dp"
                 android:layout_height="40dp"
                 android:background="@android:color/transparent"
-                android:src="@drawable/ic_filter_list"
-                android:contentDescription="@string/filter"/>
+                android:contentDescription="@string/filter"
+                android:src="@drawable/ic_filter_list" />
         </LinearLayout>
 
         <!-- Everything below can scroll -->
@@ -73,8 +72,8 @@
             android:layout_width="match_parent"
             android:layout_height="0dp"
             android:layout_weight="1"
-            android:fillViewport="true"
             android:clipToPadding="false"
+            android:fillViewport="true"
             android:paddingBottom="96dp">
 
             <LinearLayout
@@ -87,17 +86,58 @@
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:orientation="horizontal"
+                    android:layout_marginTop="8dp"
                     android:gravity="center"
-                    android:layout_marginTop="8dp">
+                    android:orientation="horizontal">
 
-                    <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:gravity="center" android:text="M"/>
-                    <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:gravity="center" android:text="T"/>
-                    <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:gravity="center" android:text="W"/>
-                    <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:gravity="center" android:text="T"/>
-                    <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:gravity="center" android:text="F"/>
-                    <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:gravity="center" android:text="S"/>
-                    <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:gravity="center" android:text="S"/>
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:gravity="center"
+                        android:text="M" />
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:gravity="center"
+                        android:text="T" />
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:gravity="center"
+                        android:text="W" />
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:gravity="center"
+                        android:text="T" />
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:gravity="center"
+                        android:text="F" />
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:gravity="center"
+                        android:text="S" />
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:gravity="center"
+                        android:text="S" />
                 </LinearLayout>
 
                 <!-- Month grid (non-scrolling) -->
@@ -105,22 +145,22 @@
                     android:id="@+id/calendarGrid"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:numColumns="7"
-                    android:horizontalSpacing="4dp"
-                    android:verticalSpacing="4dp"
-                    android:stretchMode="columnWidth"
                     android:gravity="center"
-                    tools:listitem="@layout/item_day"/>
+                    android:horizontalSpacing="4dp"
+                    android:numColumns="7"
+                    android:stretchMode="columnWidth"
+                    android:verticalSpacing="4dp"
+                    tools:listitem="@layout/item_day" />
 
                 <!-- Selected date title -->
                 <TextView
                     android:id="@+id/selectedDateLabel"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:textStyle="bold"
-                    android:textSize="18sp"
                     android:layout_marginTop="16dp"
-                    tools:text="16th September"/>
+                    android:textSize="18sp"
+                    android:textStyle="bold"
+                    tools:text="16th September" />
 
                 <!-- Reminders for the day -->
                 <androidx.recyclerview.widget.RecyclerView
@@ -128,7 +168,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:overScrollMode="never"
-                    tools:listitem="@layout/item_reminder"/>
+                    tools:listitem="@layout/item_reminder" />
             </LinearLayout>
         </androidx.core.widget.NestedScrollView>
     </LinearLayout>
@@ -141,10 +181,10 @@
         android:layout_gravity="bottom|end"
         android:layout_marginEnd="20dp"
         android:layout_marginBottom="100dp"
+        android:contentDescription="@string/add_reminder"
         android:src="@drawable/ic_add"
         app:backgroundTint="@color/yellow"
-        app:tint="@color/white"
-        android:contentDescription="@string/add_reminder"/>
+        app:tint="@color/white" />
 
     <!-- Goose (overlay, pinned bottom-start) -->
     <ImageView
@@ -155,5 +195,5 @@
         android:layout_marginStart="160dp"
         android:layout_marginBottom="70dp"
         android:contentDescription="@string/goose"
-        android:src="@drawable/goose_default"/>
+        android:src="@drawable/goose_default" />
 </FrameLayout>

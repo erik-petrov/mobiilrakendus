@@ -12,14 +12,13 @@ import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.example.honk.model.Reminder
 import android.widget.ArrayAdapter
 import androidx.recyclerview.widget.LinearLayoutManager
-
+import androidx.navigation.fragment.findNavController
 
 data class Category(
     var name: String,
     var color: Int,
     var reminders: MutableList<Reminder> = mutableListOf()
 )
-
 
 class CategoriesFragment : Fragment() {
 
@@ -168,12 +167,12 @@ class CategoriesFragment : Fragment() {
                 reminder.isDone = isChecked
             }
 
-            // 📝 Edit button
+            // Edit button
             holder.editButton.setOnClickListener {
                 showEditReminderDialog(reminder, position)
             }
 
-            // 🗑️ Delete button
+            // Delete button
             holder.deleteButton.setOnClickListener {
                 AlertDialog.Builder(requireContext())
                     .setTitle("Delete note?")
@@ -220,7 +219,7 @@ class CategoriesFragment : Fragment() {
         dialog.show()
     }
 
-    private fun showCategoryDetails(category: Category) {
+    /*private fun showCategoryDetails(category: Category) {
         val dialogView = layoutInflater.inflate(R.layout.dialog_category_details, null)
         val title = dialogView.findViewById<TextView>(R.id.categoryTitle)
         val closeButton = dialogView.findViewById<ImageButton>(R.id.closeButton)
@@ -276,6 +275,15 @@ class CategoriesFragment : Fragment() {
         }
 
         dialog.show()
+    }   */
+
+    private fun showCategoryDetails(category: Category) {
+        val index = categories.indexOf(category)
+        val bundle = Bundle()
+        bundle.putString("category_name", category.name)
+        bundle.putInt("category_index", index)
+
+        findNavController().navigate(R.id.folderDetailsFragment, bundle)
     }
 
     private fun showEditCategoryDialog(category: Category, onUpdated: () -> Unit) {

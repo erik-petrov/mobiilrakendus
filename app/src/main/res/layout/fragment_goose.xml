@@ -24,12 +24,49 @@
         android:progressDrawable="@drawable/xp_progress_drawable"
         android:layout_marginBottom="24dp"/>
 
-    <ImageView
+    <!-- <ImageView
         android:id="@+id/gooseImage"
         android:layout_width="200dp"
         android:layout_height="200dp"
         android:src="@drawable/goose_happy"
         android:contentDescription="Goose"
-        android:adjustViewBounds="true" />
+        android:adjustViewBounds="true" /> -->
+
+    <RelativeLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content">
+
+        <!-- Goose -->
+        <ImageView
+            android:id="@+id/gooseImage"
+            android:layout_width="200dp"
+            android:layout_height="200dp"
+            android:src="@drawable/goose_happy"
+            android:contentDescription="Goose"
+            android:adjustViewBounds="true" />
+
+        <!-- Bubble -->
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_toEndOf="@id/gooseImage"
+            android:layout_alignTop="@id/gooseImage"
+            android:layout_marginStart="16dp"
+            android:background="@drawable/dialog_bubble"
+            android:padding="16dp"
+            android:orientation="vertical"
+            android:gravity="center">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="For API"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                android:textColor="@color/black" />
+
+        </LinearLayout>
+
+    </RelativeLayout>
 
 </LinearLayout>
