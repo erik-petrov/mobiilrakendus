@@ -269,4 +269,8 @@ class CalendarFragment : Fragment() {
         }
     }
 
+    fun onClick_fab_add_remainder(view: View?){
+
+    }
+
 }
