@@ -16,9 +16,11 @@
         android:icon="@drawable/ic_folders"
         android:title="Folders" />
 
+    <!-- Goose title might be a little messy, considering everything else is called settings -->
     <item
         android:id="@+id/settingsFragment"
-        android:icon="@drawable/ic_settings"
-        android:title="Settings" />
+        android:icon="@drawable/ic_egg_outline"
+        android:title="Goose" />
+
 
 </menu>

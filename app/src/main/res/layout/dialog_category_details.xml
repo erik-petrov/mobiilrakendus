@@ -1,79 +1,94 @@
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="wrap_content"
-    android:orientation="vertical"
+    android:layout_height="match_parent"
     android:padding="16dp"
-    android:background="@drawable/dialog_bg">
+    android:paddingBottom="80dp">
 
-    <!-- Title row (you may already have this) -->
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:gravity="center_vertical"
-        android:paddingBottom="8dp">
+        android:layout_height="match_parent"
+        android:orientation="vertical">
 
-        <TextView
-            android:id="@+id/categoryTitle"
-            android:layout_width="0dp"
+        <!-- Header with back button and title -->
+        <LinearLayout
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:layout_marginBottom="16dp"
+            android:layout_marginTop="40dp"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <!-- Back Button -->
+            <ImageButton
+                android:id="@+id/backButton"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:background="?android:attr/selectableItemBackgroundBorderless"
+                android:contentDescription="Back"
+                android:src="@drawable/ic_arrow_left"
+                android:scaleType="center"
+                android:padding="12dp" />
+
+            <!-- Title -->
+            <TextView
+                android:id="@+id/categoryTitle"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="16dp"
+                android:layout_weight="1"
+                android:gravity="center"
+                android:text="Category Name"
+                android:textSize="24sp"
+                android:textStyle="bold" />
+
+            <!-- Edit Button -->
+            <ImageButton
+                android:id="@+id/editCategory"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:background="?android:attr/selectableItemBackgroundBorderless"
+                android:contentDescription="Edit"
+                android:src="@drawable/ic_edit"
+                android:scaleType="center"
+                android:padding="12dp" />
+
+            <!-- Delete Button -->
+            <ImageButton
+                android:id="@+id/deleteCategory"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:background="?android:attr/selectableItemBackgroundBorderless"
+                android:contentDescription="Delete"
+                android:src="@drawable/ic_delete"
+                android:scaleType="center"
+                android:padding="12dp" />
+
+        </LinearLayout>
+
+        <!-- Reminders List -->
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/reminderRecycler"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
             android:layout_weight="1"
-            android:text="Category name"
-            android:textStyle="bold"
-            android:textSize="18sp" />
+            tools:listitem="@layout/item_note" />
 
-        <ImageButton
-            android:id="@+id/closeButton"
-            android:layout_width="36dp"
-            android:layout_height="36dp"
-            android:background="@android:color/transparent"
-            android:contentDescription="@string/close"
-            android:src="@drawable/ic_close" />
     </LinearLayout>
 
-    <!-- Actions row (add these) -->
-    <LinearLayout
-        android:id="@+id/actionsRow"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:gravity="end"
-        android:paddingBottom="8dp">
-
-        <ImageButton
-            android:id="@+id/editCategory"
-            android:layout_width="40dp"
-            android:layout_height="40dp"
-            android:background="@android:color/transparent"
-            android:contentDescription="@string/edit"
-            android:src="@drawable/ic_edit" />
-
-        <ImageButton
-            android:id="@+id/deleteCategory"
-            android:layout_width="40dp"
-            android:layout_height="40dp"
-            android:background="@android:color/transparent"
-            android:contentDescription="@string/delete"
-            android:src="@drawable/ic_delete" />
-    </LinearLayout>
-
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/reminderRecycler"
-        android:layout_width="match_parent"
-        android:layout_height="200dp"
-        android:layout_marginTop="8dp"
-        tools:listitem="@layout/item_note" />
-
+    <!-- Add Reminder Button -->
     <com.google.android.material.floatingactionbutton.FloatingActionButton
         android:id="@+id/fab_add_reminder"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="end"
-        android:layout_marginTop="12dp"
+        android:layout_width="70dp"
+        android:layout_height="70dp"
+        android:layout_gravity="bottom|end"
+        android:layout_marginEnd="30dp"
+        android:layout_marginBottom="120dp"
         android:src="@drawable/ic_add"
+        android:contentDescription="Add reminder"
         app:backgroundTint="@color/yellow"
         app:tint="@color/white" />
 
-</LinearLayout>
+</FrameLayout>

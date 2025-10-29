@@ -17,16 +17,41 @@
         android:label="Notes"
         tools:layout="@layout/notes_fragment" />
 
-    <fragment
+    <!-- <fragment
         android:id="@+id/categoriesFragment"
         android:name="com.example.honk.ui.categories.CategoriesFragment"
         android:label="Categories"
         tools:layout="@layout/categories_fragment" />
+
+        <fragment
+        android:id="@+id/folderDetailsFragment"
+        android:name="com.example.honk.ui.categories.FolderDetailsFragment"
+        android:label="Folder Details"
+        tools:layout="@layout/fragment_folder_details" />-->
+
+    <fragment
+        android:id="@+id/categoriesFragment"
+        android:name="com.example.honk.ui.categories.CategoriesFragment"
+        android:label="Categories"
+        tools:layout="@layout/categories_fragment">
+
+        <action
+            android:id="@+id/action_categoriesFragment_to_folderDetailsFragment"
+            app:destination="@id/folderDetailsFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/folderDetailsFragment"
+        android:name="com.example.honk.ui.categories.FolderDetailsFragment"
+        android:label="Folder Details"
+        tools:layout="@layout/fragment_folder_details" />
 
     <fragment
         android:id="@+id/settingsFragment"
         android:name="com.example.honk.ui.goose.GooseFragment"
         android:label="Settings"
         tools:layout="@layout/settings_fragment" />
+
+
 
 </navigation>

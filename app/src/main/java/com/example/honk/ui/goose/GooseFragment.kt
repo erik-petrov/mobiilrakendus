@@ -10,16 +10,22 @@ import android.widget.ImageView
 import android.widget.ProgressBar
 import android.widget.TextView
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.lifecycleScope
 import com.example.honk.R
+import com.example.honk.repository.JokeRepository
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 
 class GooseFragment : Fragment() {
 
     private lateinit var gooseImage: ImageView
     private lateinit var xpBar: ProgressBar
     private lateinit var xpText: TextView
+    private lateinit var jokeText: TextView
     private var gooseXP = 50  // 0–100
     private var isHappy = true
     private var mediaPlayer: MediaPlayer? = null
+    private var jr = JokeRepository()
 
     private val xpDecayRunnable = object : Runnable {
         override fun run() {
@@ -41,7 +47,9 @@ class GooseFragment : Fragment() {
         gooseImage = view.findViewById(R.id.gooseImage)
         xpBar = view.findViewById(R.id.xpBar)
         xpText = view.findViewById(R.id.xpText)
+        jokeText = view.findViewById(R.id.jokeText)
 
+        updateJokeText()
         updateGooseMood()
 
         gooseImage.setOnClickListener {
@@ -61,6 +69,11 @@ class GooseFragment : Fragment() {
         gooseImage.removeCallbacks(xpDecayRunnable)
     }
 
+    private fun updateJokeText(){
+        lifecycleScope.launch {
+            jokeText.text = jr.fetchShortJoke()
+        }
+    }
 
     private fun honkGoose() {
         // animate goose: grow and shrink

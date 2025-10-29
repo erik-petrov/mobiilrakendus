@@ -16,7 +16,7 @@ class HonkTypeConverters {
     @TypeConverter
     fun toUUID(uuidString: String): UUID = UUID.fromString(uuidString)
 
-    // List<String> to JSON (для reminder offsets)
+    // List<String> to JSON (for reminder offsets)
     @TypeConverter
     fun fromStringList(list: List<String>): String {
         return gson.toJson(list)
