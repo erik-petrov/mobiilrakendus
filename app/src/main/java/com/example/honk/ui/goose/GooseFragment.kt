@@ -71,7 +71,8 @@ class GooseFragment : Fragment() {
 
     private fun updateJokeText(){
         lifecycleScope.launch {
-            jokeText.text = jr.fetchShortJoke()
+            val jk = jr.fetchShortJoke()
+            jokeText.text = if (!jk.isEmpty()) jk else "ASCII silly question, get a silly ANSI." //fallback
         }
     }
 
