@@ -1,4 +1,6 @@
-<shape xmlns:android="http://schemas.android.com/apk/res/android"
-    android:shape="oval">
-    <solid android:color="#FFF59D"/> <!-- light yellow -->
+<!-- res/drawable/calendar_day_today_border.xml -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
+    <solid android:color="@android:color/transparent"/>
+    <corners android:radius="8dp"/>
+    <stroke android:width="2dp" android:color="@color/yellow"/>
 </shape>

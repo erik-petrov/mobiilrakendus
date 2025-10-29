@@ -63,11 +63,14 @@ class CalendarFragment : Fragment() {
         // --- Day click listener ---
         calendarGrid.onItemClickListener =
             AdapterView.OnItemClickListener { _, _, position, _ ->
-                val day = position + 1
-                val sdf = SimpleDateFormat("yyyy-MM", Locale.getDefault())
-                selectedDate = "${sdf.format(currentCalendar.time)}-${String.format("%02d", day)}"
-                view.findViewById<TextView>(R.id.selectedDateLabel).text = "$day ${monthLabel.text}"
-                updateReminderList()
+                val day = calendarGrid.adapter.getItem(position) as String
+                if (day.isNotBlank()) {
+                    val sdf = SimpleDateFormat("yyyy-MM", Locale.getDefault())
+                    selectedDate = "${sdf.format(currentCalendar.time)}-${day.padStart(2, '0')}"
+                    view.findViewById<TextView>(R.id.selectedDateLabel).text =
+                        "$day ${monthLabel.text}"
+                    updateReminderList()
+                }
             }
 
         // --- RecyclerView setup ---
@@ -95,20 +98,76 @@ class CalendarFragment : Fragment() {
     // --- Filter popup dialog ---
     private fun showFilterDialog() {
         val dialogView = layoutInflater.inflate(R.layout.dialog_filter, null)
+        val checkAll = dialogView.findViewById<CheckBox>(R.id.checkAll)
+        val checkWork = dialogView.findViewById<CheckBox>(R.id.checkWork)
+        val checkPet = dialogView.findViewById<CheckBox>(R.id.checkPet)
+        val checkSchool = dialogView.findViewById<CheckBox>(R.id.checkSchool)
+        val checkHome = dialogView.findViewById<CheckBox>(R.id.checkHome)
+
         val dialog = AlertDialog.Builder(requireContext())
             .setView(dialogView)
             .setCancelable(true)
             .create()
         dialog.window?.setBackgroundDrawableResource(android.R.color.transparent)
         dialog.show()
+
+        var isUpdating = false
+
+        // Clicking 'All themes' changes others themes behaviour
+        checkAll.setOnCheckedChangeListener { _, isChecked ->
+            if (isUpdating) return@setOnCheckedChangeListener
+            isUpdating = true
+            if (isChecked) {
+                listOf(checkWork, checkPet, checkSchool, checkHome).forEach {
+                    it.isChecked = false
+                }
+            } else {
+                listOf(checkWork, checkPet, checkSchool, checkHome).forEach {
+                    it.isEnabled = true
+                }
+            }
+            isUpdating = false
+        }
+
+        // Clicking other themes changes 'All themes' behavious
+        val themeCheckChangeListener = CompoundButton.OnCheckedChangeListener { _, _ ->
+            if (isUpdating) return@OnCheckedChangeListener
+            isUpdating = true
+            if (checkWork.isChecked || checkPet.isChecked || checkSchool.isChecked || checkHome.isChecked) {
+                checkAll.isChecked = false
+            }
+            isUpdating = false
+        }
+
+        checkWork.setOnCheckedChangeListener(themeCheckChangeListener)
+        checkPet.setOnCheckedChangeListener(themeCheckChangeListener)
+        checkSchool.setOnCheckedChangeListener(themeCheckChangeListener)
+        checkHome.setOnCheckedChangeListener(themeCheckChangeListener)
+
     }
 
     // --- Calendar update logic ---
     private fun updateCalendar() {
+        val tempCalendar = currentCalendar.clone() as Calendar
+        tempCalendar.set(Calendar.DAY_OF_MONTH, 1)
+        var firstDayOfWeek = tempCalendar.get(Calendar.DAY_OF_WEEK) - 2
+        if (firstDayOfWeek < 0) {
+            firstDayOfWeek += 7
+        }
+        tempCalendar.add(Calendar.MONTH, -1)
+        val prevMonthDays = tempCalendar.getActualMaximum(Calendar.DAY_OF_MONTH)
+        tempCalendar.add(Calendar.MONTH, 1)
+
         val monthFormat = SimpleDateFormat("MMMM", Locale.getDefault())
         monthLabel.text = monthFormat.format(currentCalendar.time)
         val daysInMonth = currentCalendar.getActualMaximum(Calendar.DAY_OF_MONTH)
-        val days = (1..daysInMonth).map { it.toString() }
+        val days = mutableListOf<String>()
+        if (firstDayOfWeek != 0) {
+            for (i in prevMonthDays - firstDayOfWeek + 1..prevMonthDays) {
+                days.add(i.toString())
+            }
+        }
+        for (d in 1..daysInMonth) days.add(d.toString())
         calendarGrid.adapter = DaysAdapter(days)
     }
 
@@ -199,7 +258,9 @@ class CalendarFragment : Fragment() {
             dayText.text = days[position]
 
             val today = Calendar.getInstance()
-            if (currentCalendar.get(Calendar.YEAR) == today.get(Calendar.YEAR) &&
+            if (
+                days[position].isNotBlank() &&
+                currentCalendar.get(Calendar.YEAR) == today.get(Calendar.YEAR) &&
                 currentCalendar.get(Calendar.MONTH) == today.get(Calendar.MONTH) &&
                 days[position].toInt() == today.get(Calendar.DAY_OF_MONTH)
             ) {

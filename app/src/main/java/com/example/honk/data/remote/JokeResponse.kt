@@ -4,7 +4,7 @@ import com.squareup.moshi.JsonClass
 
 @JsonClass(generateAdapter = true)
 data class JokeResponse(
-    val error: Boolean,
+    val error: Boolean?,
     val category: String? = null,
     val type: String,          // "single"
     val joke: String? = null,  // we enforce type=single

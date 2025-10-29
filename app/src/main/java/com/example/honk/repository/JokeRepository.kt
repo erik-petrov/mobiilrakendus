@@ -2,6 +2,7 @@ package com.example.honk.repository
 
 import com.example.honk.data.remote.JokeApiService
 import com.example.honk.data.remote.NetworkModule
+import kotlinx.coroutines.runBlocking
 
 class JokeRepository(
     private val api: JokeApiService =
@@ -27,7 +28,7 @@ class JokeRepository(
             if (!resp.error) {
                 val candidate = resp.jokes
                     .asSequence()
-                    .filter { !it.error && it.type == "single" && !it.joke.isNullOrBlank() }
+                    .filter { it.type == "single" && !it.joke.isNullOrBlank() }
                     .map { it.joke!!.trim() }
                     .firstOrNull { it.length <= maxLen }
                 if (candidate != null) return candidate
@@ -35,7 +36,7 @@ class JokeRepository(
                 // if none <= maxLen, keep shortest
                 val shortest = resp.jokes
                     .asSequence()
-                    .filter { !it.error && it.type == "single" && !it.joke.isNullOrBlank() }
+                    .filter { it.type == "single" && !it.joke.isNullOrBlank() }
                     .map { it.joke!!.trim() }
                     .minByOrNull { it.length }
 
@@ -55,7 +56,7 @@ class JokeRepository(
             if (!resp.error) {
                 val candidate = resp.jokes
                     .asSequence()
-                    .filter { !it.error && it.type == "single" && !it.joke.isNullOrBlank() }
+                    .filter { it.type == "single" && !it.joke.isNullOrBlank() }
                     .map { it.joke!!.trim() }
                     .firstOrNull { it.length <= maxLen }
                 if (candidate != null) return candidate
