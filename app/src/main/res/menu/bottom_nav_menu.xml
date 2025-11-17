@@ -18,7 +18,7 @@
 
     <!-- Goose title might be a little messy, considering everything else is called settings -->
     <item
-        android:id="@+id/settingsFragment"
+        android:id="@+id/gooseFragment"
         android:icon="@drawable/ic_egg_outline"
         android:title="Goose" />
 

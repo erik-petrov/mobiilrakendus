@@ -47,11 +47,15 @@
         tools:layout="@layout/fragment_folder_details" />
 
     <fragment
-        android:id="@+id/settingsFragment"
+        android:id="@+id/gooseFragment"
         android:name="com.example.honk.ui.goose.GooseFragment"
+        android:label="Goose"
+        tools:layout="@layout/fragment_goose" />
+
+    <fragment
+        android:id="@+id/settingsRealFragment"
+        android:name="com.example.honk.ui.goose.SettingsFragment"
         android:label="Settings"
-        tools:layout="@layout/settings_fragment" />
-
-
+        tools:layout="@layout/fragment_settings" />
 
 </navigation>

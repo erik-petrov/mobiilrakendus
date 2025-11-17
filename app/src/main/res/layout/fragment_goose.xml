@@ -1,73 +1,82 @@
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:gravity="center"
-    android:orientation="vertical"
     android:padding="24dp">
 
-    <TextView
-        android:id="@+id/xpText"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginBottom="12dp"
-        android:text="XP: 50 / 100"
-        android:textSize="18sp"
-        android:textStyle="bold" />
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:gravity="center"
+        android:orientation="vertical">
 
-    <ProgressBar
-        android:id="@+id/xpBar"
-        style="?android:attr/progressBarStyleHorizontal"
-        android:layout_width="250dp"
-        android:layout_height="16dp"
-        android:layout_marginBottom="24dp"
-        android:max="100"
-        android:progress="50"
-        android:progressDrawable="@drawable/xp_progress_drawable" />
-
-    <!-- <ImageView
-        android:id="@+id/gooseImage"
-        android:layout_width="200dp"
-        android:layout_height="200dp"
-        android:src="@drawable/goose_happy"
-        android:contentDescription="Goose"
-        android:adjustViewBounds="true" /> -->
-
-    <RelativeLayout
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content">
-
-        <!-- Goose -->
-        <ImageView
-            android:id="@+id/gooseImage"
-            android:layout_width="200dp"
-            android:layout_height="200dp"
-            android:adjustViewBounds="true"
-            android:contentDescription="Goose"
-            android:src="@drawable/goose_happy" />
-
-        <!-- Bubble -->
-        <LinearLayout
+        <TextView
+            android:id="@+id/xpText"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_alignTop="@id/gooseImage"
-            android:layout_marginStart="16dp"
-            android:layout_toEndOf="@id/gooseImage"
-            android:background="@drawable/dialog_bubble"
-            android:gravity="center"
-            android:orientation="vertical"
-            android:padding="16dp">
+            android:layout_marginBottom="12dp"
+            android:text="XP: 50 / 100"
+            android:textSize="18sp"
+            android:textStyle="bold" />
 
-            <TextView
-                android:id="@+id/jokeText"
+        <ProgressBar
+            android:id="@+id/xpBar"
+            style="?android:attr/progressBarStyleHorizontal"
+            android:layout_width="250dp"
+            android:layout_height="16dp"
+            android:layout_marginBottom="24dp"
+            android:max="100"
+            android:progress="50"
+            android:progressDrawable="@drawable/xp_progress_drawable" />
+
+        <RelativeLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content">
+
+            <!-- Goose -->
+            <ImageView
+                android:id="@+id/gooseImage"
+                android:layout_width="200dp"
+                android:layout_height="200dp"
+                android:adjustViewBounds="true"
+                android:contentDescription="Goose"
+                android:src="@drawable/goose_happy" />
+
+            <!-- Bubble -->
+            <LinearLayout
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="For API"
-                android:textColor="@color/black"
-                android:textSize="16sp"
-                android:textStyle="bold" />
+                android:layout_alignTop="@id/gooseImage"
+                android:layout_marginStart="16dp"
+                android:layout_toEndOf="@id/gooseImage"
+                android:background="@drawable/dialog_bubble"
+                android:gravity="center"
+                android:orientation="vertical"
+                android:padding="16dp">
 
-        </LinearLayout>
+                <TextView
+                    android:id="@+id/jokeText"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="For API"
+                    android:textColor="@color/black"
+                    android:textSize="16sp"
+                    android:textStyle="bold" />
 
-    </RelativeLayout>
+            </LinearLayout>
 
-</LinearLayout>
+        </RelativeLayout>
+
+    </LinearLayout>
+
+    <!-- Settings -->
+    <ImageButton
+        android:id="@+id/settingsButton"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:layout_gravity="top|end"
+        android:layout_marginTop="10dp"
+        android:background="@android:color/transparent"
+        android:src="@drawable/ic_settings"
+        android:contentDescription="Settings" />
+
+</FrameLayout>

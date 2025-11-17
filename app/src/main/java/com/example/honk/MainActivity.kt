@@ -8,6 +8,8 @@ import androidx.navigation.ui.AppBarConfiguration
 import androidx.navigation.ui.setupActionBarWithNavController
 import androidx.navigation.ui.setupWithNavController
 import com.example.honk.databinding.ActivityMainBinding
+import android.content.Context
+import androidx.appcompat.app.AppCompatDelegate
 
 class MainActivity : AppCompatActivity() {
 
@@ -27,10 +29,14 @@ class MainActivity : AppCompatActivity() {
                 R.id.calendarFragment,
                 R.id.notesFragment,
                 R.id.categoriesFragment,
-                R.id.settingsFragment,
+                R.id.gooseFragment,
                 R.id.folderDetailsFragment
             )
         )
+
+        val sharedPreferences = getSharedPreferences("app_theme", Context.MODE_PRIVATE)
+        val nightMode = sharedPreferences.getInt("night_mode", AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM)
+        AppCompatDelegate.setDefaultNightMode(nightMode)
 
         binding.navView.setupWithNavController(navController)
     }

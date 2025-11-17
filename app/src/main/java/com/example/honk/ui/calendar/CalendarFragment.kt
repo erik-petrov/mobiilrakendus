@@ -104,7 +104,7 @@ class CalendarFragment : Fragment() {
         val checkSchool = dialogView.findViewById<CheckBox>(R.id.checkSchool)
         val checkHome = dialogView.findViewById<CheckBox>(R.id.checkHome)
 
-        val dialog = AlertDialog.Builder(requireContext())
+        val dialog = AlertDialog.Builder(requireContext(), R.style.Theme_HONK_Dialog)
             .setView(dialogView)
             .setCancelable(true)
             .create()
@@ -179,7 +179,7 @@ class CalendarFragment : Fragment() {
         val categorySpinner = dialogView.findViewById<Spinner>(R.id.categorySpinner)
         val addButton = dialogView.findViewById<Button>(R.id.addReminderButton)
 
-        val dialog = AlertDialog.Builder(requireContext())
+        val dialog = AlertDialog.Builder(requireContext(), R.style.Theme_HONK_Dialog)
             .setView(dialogView)
             .setCancelable(true)
             .create()
@@ -225,7 +225,7 @@ class CalendarFragment : Fragment() {
         reminderTime.setText(reminder.time)
         addButton.text = "Save Changes"
 
-        val dialog = AlertDialog.Builder(requireContext())
+        val dialog = AlertDialog.Builder(requireContext(), R.style.Theme_HONK_Dialog)
             .setView(dialogView)
             .setCancelable(true)
             .setNegativeButton("Delete") { _, _ ->

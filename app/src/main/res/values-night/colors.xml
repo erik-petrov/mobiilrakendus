@@ -8,12 +8,11 @@
     <color name="black">#000000</color>
     <color name="white">#FFFFFF</color>
     <color name="yellow">#FFD700</color>
-    <color name="category_red">#FFCDD2</color>
-    <color name="category_green">#C8E6C9</color>
-    <color name="category_blue">#BBDEFB</color>
-    <color name="category_yellow">#FFF9C4</color>
+    <color name="category_red">#7B1C1C</color>
+    <color name="category_green">#1B4332</color>
+    <color name="category_blue">#1E3A5F</color>
+    <color name="category_yellow">#5C4F00</color>
     <color name="honk_yellow">#FFD600</color>
-    <color name="background">#FFFFFF</color>
-    <color name="text_primary">#000000</color>
-
+    <color name="background">#121212</color>
+    <color name="text_primary">#FFFFFF</color>
 </resources>

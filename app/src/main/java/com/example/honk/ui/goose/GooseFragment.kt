@@ -14,7 +14,9 @@ import androidx.lifecycle.lifecycleScope
 import com.example.honk.R
 import com.example.honk.repository.JokeRepository
 import kotlinx.coroutines.launch
+import android.widget.ImageButton
 import kotlinx.coroutines.runBlocking
+import androidx.navigation.fragment.findNavController
 
 class GooseFragment : Fragment() {
 
@@ -43,6 +45,11 @@ class GooseFragment : Fragment() {
         savedInstanceState: Bundle?
     ): View {
         val view = inflater.inflate(R.layout.fragment_goose, container, false)
+
+        val settingsButton = view.findViewById<ImageButton>(R.id.settingsButton)
+        settingsButton.setOnClickListener {
+            findNavController().navigate(R.id.settingsRealFragment)
+        }
 
         gooseImage = view.findViewById(R.id.gooseImage)
         xpBar = view.findViewById(R.id.xpBar)
@@ -79,8 +86,8 @@ class GooseFragment : Fragment() {
     private fun honkGoose() {
         // animate goose: grow and shrink
         gooseImage.animate()
-            .scaleX(1.3f)
-            .scaleY(1.3f)
+            .scaleX(1.1f)
+            .scaleY(1.1f)
             .setDuration(200)
             .withEndAction {
                 gooseImage.animate().scaleX(1f).scaleY(1f).duration = 200
