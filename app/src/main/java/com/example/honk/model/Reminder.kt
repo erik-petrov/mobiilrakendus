@@ -6,5 +6,6 @@ data class Reminder(
     var text: String = "",
     var category: String = "",
     var isDone: Boolean = false,
-    var priority: String = "Medium"
+    var priority: String = "Medium",
+    var imageUri: String? = null
 )

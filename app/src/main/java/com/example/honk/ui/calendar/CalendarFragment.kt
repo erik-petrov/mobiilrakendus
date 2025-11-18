@@ -21,8 +21,25 @@ import android.widget.Spinner
 import android.widget.TextView
 import androidx.core.widget.NestedScrollView
 
+import android.widget.ImageView
+import android.net.Uri
+import java.util.Locale
+
+import android.provider.MediaStore
+import androidx.activity.result.contract.ActivityResultContracts
+
+import android.os.Environment
+import androidx.core.content.ContextCompat
+import androidx.core.content.FileProvider
+import android.Manifest
+import android.content.pm.PackageManager
+import java.io.File
+
 
 class CalendarFragment : Fragment() {
+
+    private var pendingImageUri: Uri? = null
+    private var currentImagePreview: ImageView? = null
 
     private lateinit var calendarGrid: GridView
     private lateinit var monthLabel: TextView
@@ -32,6 +49,73 @@ class CalendarFragment : Fragment() {
     private val reminders = mutableListOf<Reminder>()
     private var selectedDate: String? = null
     private var currentCalendar: Calendar = Calendar.getInstance()
+
+    // choosing photo from gallery
+    private val pickImageLauncher =
+        registerForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
+            if (uri != null) {
+                pendingImageUri = uri
+                currentImagePreview?.apply {
+                    visibility = View.VISIBLE
+                    setImageURI(uri)
+                }
+            }
+        }
+
+    // taking a photo
+    private val takePictureLauncher =
+        registerForActivityResult(ActivityResultContracts.TakePicture()) { success: Boolean ->
+            if (success && pendingImageUri != null) {
+                currentImagePreview?.apply {
+                    visibility = View.VISIBLE
+                    setImageURI(pendingImageUri)
+                }
+            } else {
+                pendingImageUri = null
+            }
+        }
+
+    private val requestCameraPermissionLauncher =
+        registerForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
+            if (granted) {
+                openCamera()
+            } else {
+                Toast.makeText(
+                    requireContext(),
+                    "Camera permission denied",
+                    Toast.LENGTH_SHORT
+                ).show()
+            }
+        }
+
+    private fun openCamera() {
+        val uri = createImageUri()
+        if (uri == null) {
+            Toast.makeText(requireContext(), "Cannot create image file", Toast.LENGTH_SHORT).show()
+            return
+        }
+        pendingImageUri = uri
+        takePictureLauncher.launch(uri)
+    }
+
+
+    private fun createImageUri(): Uri? {
+        val context = requireContext()
+        val imagesDir = context.getExternalFilesDir(Environment.DIRECTORY_PICTURES)
+            ?: return null
+
+        val imageFile = File(
+            imagesDir,
+            "reminder_${System.currentTimeMillis()}.jpg"
+        )
+
+        return FileProvider.getUriForFile(
+            context,
+            "${context.packageName}.fileprovider",
+            imageFile
+        )
+    }
+
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -178,12 +262,42 @@ class CalendarFragment : Fragment() {
         val reminderTime = dialogView.findViewById<EditText>(R.id.reminderTime)
         val categorySpinner = dialogView.findViewById<Spinner>(R.id.categorySpinner)
         val addButton = dialogView.findViewById<Button>(R.id.addReminderButton)
+        val imagePreview = dialogView.findViewById<ImageView>(R.id.reminderImagePreview)
+        val choosePhotoButton = dialogView.findViewById<Button>(R.id.buttonChoosePhoto)
+        val takePhotoButton = dialogView.findViewById<Button>(R.id.buttonTakePhoto)
+
+        currentImagePreview = imagePreview
+        pendingImageUri = null
+        imagePreview.visibility = View.GONE
 
         val dialog = AlertDialog.Builder(requireContext(), R.style.Theme_HONK_Dialog)
             .setView(dialogView)
             .setCancelable(true)
             .create()
         dialog.window?.setBackgroundDrawableResource(android.R.color.transparent)
+
+        choosePhotoButton.setOnClickListener {
+            pickImageLauncher.launch("image/*")
+        }
+
+        takePhotoButton.setOnClickListener {
+            val context = requireContext()
+            val permission = Manifest.permission.CAMERA
+            when {
+                ContextCompat.checkSelfPermission(context, permission) == PackageManager.PERMISSION_GRANTED -> {
+                    // if we have permission
+                    openCamera()
+                }
+                shouldShowRequestPermissionRationale(permission) -> {
+                    requestCameraPermissionLauncher.launch(permission)
+                }
+                else -> {
+                    // just request permission
+                    requestCameraPermissionLauncher.launch(permission)
+                }
+            }
+        }
+
 
         addButton.setOnClickListener {
             val date = selectedDate
@@ -193,7 +307,8 @@ class CalendarFragment : Fragment() {
                     date = date,
                     time = reminderTime.text.toString(),
                     text = reminderText.text.toString(),
-                    category = category
+                    category = category,
+                    imageUri = pendingImageUri?.toString()
                 )
                 reminders.add(reminder)
                 updateReminderList()
@@ -219,11 +334,25 @@ class CalendarFragment : Fragment() {
         val reminderTime = dialogView.findViewById<EditText>(R.id.reminderTime)
         val categorySpinner = dialogView.findViewById<Spinner>(R.id.categorySpinner)
         val addButton = dialogView.findViewById<Button>(R.id.addReminderButton)
+        val imagePreview = dialogView.findViewById<ImageView>(R.id.reminderImagePreview)
+        val choosePhotoButton = dialogView.findViewById<Button>(R.id.buttonChoosePhoto)
+        val takePhotoButton = dialogView.findViewById<Button>(R.id.buttonTakePhoto)
 
+        dialogView.findViewById<TextView>(R.id.dialogTitle).text = "Edit Reminder"
         // Pre-fill existing values
         reminderText.setText(reminder.text)
         reminderTime.setText(reminder.time)
         addButton.text = "Save Changes"
+
+        currentImagePreview = imagePreview
+        if (!reminder.imageUri.isNullOrEmpty()) {
+            pendingImageUri = Uri.parse(reminder.imageUri)
+            imagePreview.visibility = View.VISIBLE
+            imagePreview.setImageURI(pendingImageUri)
+        } else {
+            pendingImageUri = null
+            imagePreview.visibility = View.GONE
+        }
 
         val dialog = AlertDialog.Builder(requireContext(), R.style.Theme_HONK_Dialog)
             .setView(dialogView)
@@ -235,10 +364,32 @@ class CalendarFragment : Fragment() {
             .create()
         dialog.window?.setBackgroundDrawableResource(android.R.color.transparent)
 
+        choosePhotoButton.setOnClickListener {
+            pickImageLauncher.launch("image/*")
+        }
+
+        takePhotoButton.setOnClickListener {
+            val context = requireContext()
+            val permission = Manifest.permission.CAMERA
+            when {
+                ContextCompat.checkSelfPermission(context, permission) == PackageManager.PERMISSION_GRANTED -> {
+                    openCamera()
+                }
+                shouldShowRequestPermissionRationale(permission) -> {
+                    requestCameraPermissionLauncher.launch(permission)
+                }
+                else -> {
+                    requestCameraPermissionLauncher.launch(permission)
+                }
+            }
+        }
+
+
         addButton.setOnClickListener {
             reminder.text = reminderText.text.toString()
             reminder.time = reminderTime.text.toString()
             reminder.category = categorySpinner.selectedItem.toString()
+            reminder.imageUri = pendingImageUri?.toString()
             updateReminderList()
             dialog.dismiss()
         }
@@ -288,6 +439,7 @@ class CalendarFragment : Fragment() {
 
         inner class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
             val text: TextView = view.findViewById(R.id.reminderText)
+            val image: ImageView = view.findViewById(R.id.reminderImage)
             val deleteButton: ImageButton = view.findViewById(R.id.deleteButton)
 
             init {
@@ -327,6 +479,7 @@ class CalendarFragment : Fragment() {
                 else -> 0xFF888888.toInt()
             }
             holder.text.setTextColor(color)
+            holder.image.visibility = View.GONE
         }
     }
 
