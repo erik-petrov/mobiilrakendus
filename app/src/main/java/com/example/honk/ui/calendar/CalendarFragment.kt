@@ -1,5 +1,6 @@
 package com.example.honk.ui.calendar
 
+import android.app.DatePickerDialog
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -7,10 +8,13 @@ import android.view.ViewGroup
 import android.widget.*
 import androidx.appcompat.app.AlertDialog
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.honk.R
+import com.example.honk.data.TaskRepository
 import com.example.honk.model.Reminder
+import com.example.honk.ui.categories.CategoryViewModel
 import java.text.SimpleDateFormat
 import java.util.*
 import android.widget.AdapterView
@@ -19,37 +23,45 @@ import android.widget.EditText
 import android.widget.ImageButton
 import android.widget.Spinner
 import android.widget.TextView
-import androidx.core.widget.NestedScrollView
-
+import com.example.honk.ui.dialogs.TaskDialog
 
 class CalendarFragment : Fragment() {
 
     private lateinit var calendarGrid: GridView
     private lateinit var monthLabel: TextView
+    private lateinit var selectedDateLabel: TextView
     private lateinit var reminderList: RecyclerView
     private lateinit var reminderAdapter: ReminderAdapter
 
-    private val reminders = mutableListOf<Reminder>()
+    private lateinit var categoryViewModel: CategoryViewModel
+
     private var selectedDate: String? = null
     private var currentCalendar: Calendar = Calendar.getInstance()
 
+    // -------- Lifecycle --------
+
     override fun onCreateView(
-        inflater: LayoutInflater, container: ViewGroup?,
+        inflater: LayoutInflater,
+        container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
         val view = inflater.inflate(R.layout.calendar_fragment, container, false)
 
-        // --- Filter button ---
-        val filterButton = view.findViewById<ImageButton>(R.id.filterButton)
-        filterButton.setOnClickListener { showFilterDialog() }
+        // Shared categories between screens
+        categoryViewModel =
+            ViewModelProvider(requireActivity())[CategoryViewModel::class.java]
 
-        // --- Setup calendar views ---
+        // Views
         calendarGrid = view.findViewById(R.id.calendarGrid)
         monthLabel = view.findViewById(R.id.monthLabel)
+        selectedDateLabel = view.findViewById(R.id.selectedDateLabel)
+        reminderList = view.findViewById(R.id.reminderList)
 
-        updateCalendar()
+        // Filter button (cosmetic for now)
+        view.findViewById<ImageButton>(R.id.filterButton)
+            .setOnClickListener { showFilterDialog() }
 
-        // --- Month navigation buttons ---
+        // Calendar navigation
         view.findViewById<View>(R.id.prevMonthBtn).setOnClickListener {
             currentCalendar.add(Calendar.MONTH, -1)
             updateCalendar()
@@ -60,42 +72,91 @@ class CalendarFragment : Fragment() {
             updateCalendar()
         }
 
-        // --- Day click listener ---
-        calendarGrid.onItemClickListener =
-            AdapterView.OnItemClickListener { _, _, position, _ ->
-                val day = calendarGrid.adapter.getItem(position) as String
-                if (day.isNotBlank()) {
-                    val sdf = SimpleDateFormat("yyyy-MM", Locale.getDefault())
-                    selectedDate = "${sdf.format(currentCalendar.time)}-${day.padStart(2, '0')}"
-                    view.findViewById<TextView>(R.id.selectedDateLabel).text =
-                        "$day ${monthLabel.text}"
-                    updateReminderList()
-                }
-            }
+        // Set up month & grid
+        updateCalendar()
 
-        // --- RecyclerView setup ---
-        reminderList = view.findViewById(R.id.reminderList)
+        // RecyclerView setup
         reminderAdapter = ReminderAdapter(
             onReminderClick = { reminder ->
-                showEditReminderDialog(reminder)
+                TaskDialog.show(
+                    fragment = this,
+                    existing = reminder,
+                    onSave = { TaskRepository.updateTask(it) },
+                    onDelete = { TaskRepository.deleteTask(reminder) }
+                )
             },
             onDeleteClick = { reminder ->
-                reminders.remove(reminder)
-                updateReminderList()
+                TaskRepository.deleteTask(reminder)
             }
         )
-
         reminderList.layoutManager = LinearLayoutManager(requireContext())
         reminderList.adapter = reminderAdapter
 
-        // --- FAB (add reminder) ---
-        val fabAdd = view.findViewById<View>(R.id.fab_add_reminder)
-        fabAdd.setOnClickListener { showAddReminderDialog() }
+        // Default: select TODAY, using dd.MM.yyyy to match date pickers
+        val dateFormat = SimpleDateFormat("dd.MM.yyyy", Locale.getDefault())
+        selectedDate = dateFormat.format(currentCalendar.time)
+        val todayDay = currentCalendar.get(Calendar.DAY_OF_MONTH)
+        selectedDateLabel.text = "$todayDay ${monthLabel.text}"
+
+        updateReminderList()
+
+        // Day click listener
+        calendarGrid.onItemClickListener =
+            AdapterView.OnItemClickListener { _, _, position, _ ->
+                val adapter = calendarGrid.adapter as DaysAdapter
+                val dayInfo = adapter.getDayInfo(position) ?: return@OnItemClickListener
+
+                // Only allow selecting current month days
+                if (!dayInfo.isCurrentMonth) return@OnItemClickListener
+
+                val clickedCal = currentCalendar.clone() as Calendar
+                clickedCal.set(Calendar.DAY_OF_MONTH, dayInfo.day.toInt())
+
+                val sdf = SimpleDateFormat("dd.MM.yyyy", Locale.getDefault())
+                selectedDate = sdf.format(clickedCal.time)
+
+                selectedDateLabel.text = "${dayInfo.day} ${monthLabel.text}"
+                updateReminderList()
+            }
+
+        // FAB – add reminder
+        view.findViewById<View>(R.id.fab_add_reminder)
+            .setOnClickListener {
+                TaskDialog.show(
+                    fragment = this,
+                    presetDate = selectedDate,
+                    onSave = { TaskRepository.addTask(it) }
+                )
+            }
+
+
+        // Observe global tasks and refresh list when anything changes
+        TaskRepository.tasks.observe(viewLifecycleOwner) {
+            updateReminderList()
+        }
+
+        TaskRepository.tasks.observe(viewLifecycleOwner) {
+            updateCalendar()
+        }
+
 
         return view
     }
 
-    // --- Filter popup dialog ---
+    private fun openDatePicker(onDateSelected: (String) -> Unit) {
+        val c = Calendar.getInstance()
+        val year = c.get(Calendar.YEAR)
+        val month = c.get(Calendar.MONTH)
+        val day = c.get(Calendar.DAY_OF_MONTH)
+
+        DatePickerDialog(requireContext(), { _, y, m, d ->
+            val formatted = "%02d.%02d.%d".format(d, m + 1, y) // dd.MM.yyyy
+            onDateSelected(formatted)
+        }, year, month, day).show()
+    }
+
+    // -------- Filter dialog (still cosmetic) --------
+
     private fun showFilterDialog() {
         val dialogView = layoutInflater.inflate(R.layout.dialog_filter, null)
         val checkAll = dialogView.findViewById<CheckBox>(R.id.checkAll)
@@ -113,7 +174,6 @@ class CalendarFragment : Fragment() {
 
         var isUpdating = false
 
-        // Clicking 'All themes' changes others themes behaviour
         checkAll.setOnCheckedChangeListener { _, isChecked ->
             if (isUpdating) return@setOnCheckedChangeListener
             isUpdating = true
@@ -121,16 +181,11 @@ class CalendarFragment : Fragment() {
                 listOf(checkWork, checkPet, checkSchool, checkHome).forEach {
                     it.isChecked = false
                 }
-            } else {
-                listOf(checkWork, checkPet, checkSchool, checkHome).forEach {
-                    it.isEnabled = true
-                }
             }
             isUpdating = false
         }
 
-        // Clicking other themes changes 'All themes' behavious
-        val themeCheckChangeListener = CompoundButton.OnCheckedChangeListener { _, _ ->
+        val themeListener = CompoundButton.OnCheckedChangeListener { _, _ ->
             if (isUpdating) return@OnCheckedChangeListener
             isUpdating = true
             if (checkWork.isChecked || checkPet.isChecked || checkSchool.isChecked || checkHome.isChecked) {
@@ -139,147 +194,112 @@ class CalendarFragment : Fragment() {
             isUpdating = false
         }
 
-        checkWork.setOnCheckedChangeListener(themeCheckChangeListener)
-        checkPet.setOnCheckedChangeListener(themeCheckChangeListener)
-        checkSchool.setOnCheckedChangeListener(themeCheckChangeListener)
-        checkHome.setOnCheckedChangeListener(themeCheckChangeListener)
-
+        checkWork.setOnCheckedChangeListener(themeListener)
+        checkPet.setOnCheckedChangeListener(themeListener)
+        checkSchool.setOnCheckedChangeListener(themeListener)
+        checkHome.setOnCheckedChangeListener(themeListener)
     }
 
-    // --- Calendar update logic ---
+    // -------- Calendar generation --------
+
+    data class DayInfo(
+        val day: String,
+        val isCurrentMonth: Boolean
+    )
+
     private fun updateCalendar() {
         val tempCalendar = currentCalendar.clone() as Calendar
         tempCalendar.set(Calendar.DAY_OF_MONTH, 1)
-        var firstDayOfWeek = tempCalendar.get(Calendar.DAY_OF_WEEK) - 2
-        if (firstDayOfWeek < 0) {
-            firstDayOfWeek += 7
-        }
-        tempCalendar.add(Calendar.MONTH, -1)
-        val prevMonthDays = tempCalendar.getActualMaximum(Calendar.DAY_OF_MONTH)
-        tempCalendar.add(Calendar.MONTH, 1)
 
+        var firstDayOfWeek = tempCalendar.get(Calendar.DAY_OF_WEEK) - 2
+        if (firstDayOfWeek < 0) firstDayOfWeek += 7
+
+        // month label
         val monthFormat = SimpleDateFormat("MMMM", Locale.getDefault())
         monthLabel.text = monthFormat.format(currentCalendar.time)
+
+        // previous month days to fill grid
+        tempCalendar.add(Calendar.MONTH, -1)
+        val prevMonthDaysCount = tempCalendar.getActualMaximum(Calendar.DAY_OF_MONTH)
+        tempCalendar.add(Calendar.MONTH, 1)
+
         val daysInMonth = currentCalendar.getActualMaximum(Calendar.DAY_OF_MONTH)
-        val days = mutableListOf<String>()
+
+        val dayInfos = mutableListOf<DayInfo>()
+
+        // previous month tail
         if (firstDayOfWeek != 0) {
-            for (i in prevMonthDays - firstDayOfWeek + 1..prevMonthDays) {
-                days.add(i.toString())
-            }
-        }
-        for (d in 1..daysInMonth) days.add(d.toString())
-        calendarGrid.adapter = DaysAdapter(days)
-    }
-
-    // --- Add Reminder dialog ---
-    private fun showAddReminderDialog() {
-        val dialogView = layoutInflater.inflate(R.layout.dialog_add_reminder, null)
-        val reminderText = dialogView.findViewById<EditText>(R.id.reminderText)
-        val reminderTime = dialogView.findViewById<EditText>(R.id.reminderTime)
-        val categorySpinner = dialogView.findViewById<Spinner>(R.id.categorySpinner)
-        val addButton = dialogView.findViewById<Button>(R.id.addReminderButton)
-
-        val dialog = AlertDialog.Builder(requireContext(), R.style.Theme_HONK_Dialog)
-            .setView(dialogView)
-            .setCancelable(true)
-            .create()
-        dialog.window?.setBackgroundDrawableResource(android.R.color.transparent)
-
-        addButton.setOnClickListener {
-            val date = selectedDate
-            val category = categorySpinner.selectedItem.toString()
-            if (date != null && reminderText.text.isNotBlank()) {
-                val reminder = Reminder(
-                    date = date,
-                    time = reminderTime.text.toString(),
-                    text = reminderText.text.toString(),
-                    category = category
-                )
-                reminders.add(reminder)
-                updateReminderList()
-                dialog.dismiss()
-            } else {
-                Toast.makeText(requireContext(), "Select a date first", Toast.LENGTH_SHORT).show()
+            for (i in prevMonthDaysCount - firstDayOfWeek + 1..prevMonthDaysCount) {
+                dayInfos.add(DayInfo(day = i.toString(), isCurrentMonth = false))
             }
         }
 
-        dialog.show()
+        // current month days
+        for (d in 1..daysInMonth) {
+            dayInfos.add(DayInfo(day = d.toString(), isCurrentMonth = true))
+        }
+
+        calendarGrid.adapter = DaysAdapter(dayInfos)
     }
 
-    // --- Update visible reminders ---
+
+    // -------- Update visible reminders --------
+
     private fun updateReminderList() {
         val currentDate = selectedDate ?: return
-        val filtered = reminders.filter { it.date == currentDate }
+        val all = TaskRepository.tasks.value ?: emptyList()
+        val filtered = all.filter { it.date == currentDate }
         reminderAdapter.setReminders(filtered)
     }
 
-    private fun showEditReminderDialog(reminder: Reminder) {
-        val dialogView = layoutInflater.inflate(R.layout.dialog_add_reminder, null)
-        val reminderText = dialogView.findViewById<EditText>(R.id.reminderText)
-        val reminderTime = dialogView.findViewById<EditText>(R.id.reminderTime)
-        val categorySpinner = dialogView.findViewById<Spinner>(R.id.categorySpinner)
-        val addButton = dialogView.findViewById<Button>(R.id.addReminderButton)
+    // -------- Days grid adapter --------
 
-        // Pre-fill existing values
-        reminderText.setText(reminder.text)
-        reminderTime.setText(reminder.time)
-        addButton.text = "Save Changes"
+    inner class DaysAdapter(
+        private val days: List<DayInfo>
+    ) : BaseAdapter() {
 
-        val dialog = AlertDialog.Builder(requireContext(), R.style.Theme_HONK_Dialog)
-            .setView(dialogView)
-            .setCancelable(true)
-            .setNegativeButton("Delete") { _, _ ->
-                reminders.remove(reminder)
-                updateReminderList()
-            }
-            .create()
-        dialog.window?.setBackgroundDrawableResource(android.R.color.transparent)
-
-        addButton.setOnClickListener {
-            reminder.text = reminderText.text.toString()
-            reminder.time = reminderTime.text.toString()
-            reminder.category = categorySpinner.selectedItem.toString()
-            updateReminderList()
-            dialog.dismiss()
-        }
-
-        dialog.show()
-    }
-
-    // --- Adapter for calendar day cells ---
-    inner class DaysAdapter(private val days: List<String>) : BaseAdapter() {
         override fun getCount() = days.size
         override fun getItem(position: Int) = days[position]
         override fun getItemId(position: Int) = position.toLong()
 
+        fun getDayInfo(position: Int): DayInfo? =
+            days.getOrNull(position)
+
         override fun getView(position: Int, convertView: View?, parent: ViewGroup?): View {
             val view = convertView ?: layoutInflater.inflate(R.layout.item_day, parent, false)
             val dayText = view.findViewById<TextView>(R.id.dayText) ?: view as TextView
-            dayText.text = days[position]
+
+            val dayInfo = days[position]
+            dayText.text = dayInfo.day
 
             val today = Calendar.getInstance()
-            if (
-                days[position].isNotBlank() &&
-                currentCalendar.get(Calendar.YEAR) == today.get(Calendar.YEAR) &&
-                currentCalendar.get(Calendar.MONTH) == today.get(Calendar.MONTH) &&
-                days[position].toInt() == today.get(Calendar.DAY_OF_MONTH)
-            ) {
+            val isToday =
+                dayInfo.isCurrentMonth &&
+                        currentCalendar.get(Calendar.YEAR) == today.get(Calendar.YEAR) &&
+                        currentCalendar.get(Calendar.MONTH) == today.get(Calendar.MONTH) &&
+                        dayInfo.day.toInt() == today.get(Calendar.DAY_OF_MONTH)
+
+            if (isToday) {
                 dayText.setBackgroundResource(R.drawable.day_cell_today_bg)
+                dayText.alpha = 1.0f
             } else {
                 dayText.setBackgroundResource(R.drawable.day_cell_bg)
+                // Previous/next month days semi-transparent
+                dayText.alpha = if (dayInfo.isCurrentMonth) 1.0f else 0.3f
             }
 
             return view
         }
     }
 
-    // --- Adapter for reminders list ---
+    // -------- Reminders list adapter --------
+
     inner class ReminderAdapter(
         private val onReminderClick: (Reminder) -> Unit,
         private val onDeleteClick: (Reminder) -> Unit
     ) : RecyclerView.Adapter<ReminderAdapter.ViewHolder>() {
 
-        private var reminderItems = listOf<Reminder>()
+        private var reminderItems: List<Reminder> = emptyList()
 
         fun setReminders(newReminders: List<Reminder>) {
             reminderItems = newReminders
@@ -317,21 +337,17 @@ class CalendarFragment : Fragment() {
 
         override fun onBindViewHolder(holder: ViewHolder, position: Int) {
             val r = reminderItems[position]
-            holder.text.text = "${r.time} – ${r.text} (${r.category})"
+            val categoryPart = if (r.category.isNotBlank()) " (${r.category})" else ""
+            holder.text.text = "${r.time} – ${r.text}$categoryPart"
 
-            val color = when (r.category.uppercase()) {
+            val color = when (r.category.uppercase(Locale.getDefault())) {
                 "WORK" -> 0xFF03A9F4.toInt()
                 "SCHOOL" -> 0xFF4CAF50.toInt()
-                "PET" -> 0xFFF44336.toInt()
+                "PETS", "PET" -> 0xFFF44336.toInt()
                 "HOME" -> 0xFF9C27B0.toInt()
                 else -> 0xFF888888.toInt()
             }
             holder.text.setTextColor(color)
         }
     }
-
-    fun onClick_fab_add_remainder(view: View?){
-
-    }
-
 }
