@@ -12,7 +12,7 @@ import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.honk.R
-import com.example.honk.data.TaskRepository
+import com.example.honk.local.LocalReminderRepository
 import com.example.honk.model.Reminder
 import com.example.honk.ui.dialogs.TaskDialog
 import com.google.android.material.floatingactionbutton.FloatingActionButton
@@ -47,7 +47,7 @@ class FolderDetailsFragment : Fragment() {
         reminderRecycler.adapter = reminderAdapter
 
         // Keep list in this folder synced with global tasks
-        TaskRepository.tasks.observe(viewLifecycleOwner) {
+        LocalReminderRepository.reminders.observe(viewLifecycleOwner) {
             refreshReminders()
         }
 
@@ -70,7 +70,7 @@ class FolderDetailsFragment : Fragment() {
                 TaskDialog.show(
                     fragment = this,
                     presetCategory = catName,
-                    onSave = { task -> TaskRepository.addTask(task) }
+                    onSave = { task -> LocalReminderRepository.add(task) }
                 )
             }
 
@@ -81,10 +81,14 @@ class FolderDetailsFragment : Fragment() {
     }
 
     private fun refreshReminders() {
-        val categoryName = viewModel.categories.value?.getOrNull(categoryIndex)?.name ?: return
-        val all = TaskRepository.tasks.value ?: mutableListOf()
+        val categoryName = viewModel.categories.value
+            ?.getOrNull(categoryIndex)
+            ?.name ?: return
+
+        val all = LocalReminderRepository.reminders.value ?: emptyList()
         val filtered = all.filter { it.category == categoryName }
-        reminderAdapter.updateData(filtered)
+
+        reminderAdapter.updateData(newList = filtered)
     }
 
     private fun showEditCategoryDialog() {
@@ -194,7 +198,7 @@ class FolderDetailsFragment : Fragment() {
 
             holder.checkBox.setOnCheckedChangeListener { _, checked ->
                 r.isDone = checked
-                TaskRepository.updateTask(r)
+                LocalReminderRepository.update(r)
             }
 
             // Edit uses the same TaskDialog
@@ -202,13 +206,13 @@ class FolderDetailsFragment : Fragment() {
                 TaskDialog.show(
                     fragment = this@FolderDetailsFragment,
                     existing = r,
-                    onSave = { updated -> TaskRepository.updateTask(updated) },
-                    onDelete = { TaskRepository.deleteTask(r) }
+                    onSave = { updated -> LocalReminderRepository.update(updated) },
+                    onDelete = { LocalReminderRepository.delete(r) }
                 )
             }
 
             holder.delete.setOnClickListener {
-                TaskRepository.deleteTask(r)
+                LocalReminderRepository.delete(r)
             }
         }
 

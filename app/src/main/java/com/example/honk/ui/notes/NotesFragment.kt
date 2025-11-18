@@ -1,28 +1,27 @@
 package com.example.honk.ui.notes
 
+import android.app.AlertDialog
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Button
 import android.widget.CheckBox
 import android.widget.ImageButton
+import android.widget.Spinner
 import android.widget.TextView
+import android.widget.ArrayAdapter
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.honk.R
-import com.example.honk.data.TaskRepository
+import com.example.honk.local.LocalReminderRepository
 import com.example.honk.model.Reminder
 import com.example.honk.ui.categories.CategoryViewModel
 import com.example.honk.ui.dialogs.TaskDialog
 import com.google.android.material.floatingactionbutton.FloatingActionButton
-import android.widget.Button
-import android.widget.Spinner
-import android.widget.ArrayAdapter
-import android.app.AlertDialog
-import android.widget.AdapterView
 
 class NotesFragment : Fragment() {
 
@@ -49,31 +48,29 @@ class NotesFragment : Fragment() {
         adapter = NotesAdapter(mutableListOf())
         notesRecycler.adapter = adapter
 
-        // Observe global task list
-        TaskRepository.tasks.observe(viewLifecycleOwner, Observer {
+        // Observe global reminder list
+        LocalReminderRepository.reminders.observe(viewLifecycleOwner, Observer {
             applyFilters()
         })
 
-        // ADD NOTE → now uses TaskDialog
+        // Add note (using TaskDialog)
         view.findViewById<FloatingActionButton>(R.id.fab_add_note)
             .setOnClickListener {
                 TaskDialog.show(
                     fragment = this,
-                    onSave = { task -> TaskRepository.addTask(task) }
+                    onSave = { task -> LocalReminderRepository.add(task) }
                 )
             }
 
-        // Filters unchanged
         view.findViewById<ImageButton>(R.id.filterButton)
             .setOnClickListener { showFilterDialog() }
 
         return view
     }
 
-    // ----------------------- FILTERING ------------------------
-
+    // FILTERING
     private fun applyFilters() {
-        val all = TaskRepository.tasks.value ?: mutableListOf()
+        val all = LocalReminderRepository.reminders.value ?: emptyList()
 
         val filtered = all.filter { note ->
             val matchDate = activeDateFilter?.let { note.date == it } ?: true
@@ -98,19 +95,15 @@ class NotesFragment : Fragment() {
         val prioritySpinner = dialogView.findViewById<Spinner>(R.id.filterPrioritySpinner)
         val applyButton = dialogView.findViewById<Button>(R.id.applyFilterButton)
 
-        val tasks = TaskRepository.tasks.value ?: listOf()
+        val list = LocalReminderRepository.reminders.value ?: emptyList()
 
-        val dates = listOf("All") + tasks.map { it.date }.distinct()
-        val categories = listOf("All") +
-                tasks.map { it.category }.filter { it.isNotBlank() }.distinct()
+        val dates = listOf("All") + list.map { it.date }.distinct()
+        val categories = listOf("All") + list.map { it.category }.filter { it.isNotBlank() }.distinct()
         val priorities = listOf("All", "High", "Medium", "Low")
 
-        dateSpinner.adapter = ArrayAdapter(requireContext(),
-            android.R.layout.simple_spinner_dropdown_item, dates)
-        categorySpinner.adapter = ArrayAdapter(requireContext(),
-            android.R.layout.simple_spinner_dropdown_item, categories)
-        prioritySpinner.adapter = ArrayAdapter(requireContext(),
-            android.R.layout.simple_spinner_dropdown_item, priorities)
+        dateSpinner.adapter = ArrayAdapter(requireContext(), android.R.layout.simple_spinner_dropdown_item, dates)
+        categorySpinner.adapter = ArrayAdapter(requireContext(), android.R.layout.simple_spinner_dropdown_item, categories)
+        prioritySpinner.adapter = ArrayAdapter(requireContext(), android.R.layout.simple_spinner_dropdown_item, priorities)
 
         val dialog = AlertDialog.Builder(requireContext())
             .setView(dialogView)
@@ -120,6 +113,7 @@ class NotesFragment : Fragment() {
             activeDateFilter = dateSpinner.selectedItem.toString().takeIf { it != "All" }
             activeCategoryFilter = categorySpinner.selectedItem.toString().takeIf { it != "All" }
             activePriorityFilter = prioritySpinner.selectedItem.toString().takeIf { it != "All" }
+
             applyFilters()
             dialog.dismiss()
         }
@@ -127,8 +121,7 @@ class NotesFragment : Fragment() {
         dialog.show()
     }
 
-    // ----------------------- ADAPTER ------------------------
-
+    // ADAPTER
     inner class NotesAdapter(private val displayed: MutableList<Reminder>) :
         RecyclerView.Adapter<NotesAdapter.NoteViewHolder>() {
 
@@ -153,22 +146,20 @@ class NotesFragment : Fragment() {
 
             holder.checkBox.setOnCheckedChangeListener { _, checked ->
                 note.isDone = checked
-                TaskRepository.notifyChanged()
+                LocalReminderRepository.update(note)
             }
 
-            // EDIT using TaskDialog
             holder.edit.setOnClickListener {
                 TaskDialog.show(
                     fragment = this@NotesFragment,
                     existing = note,
-                    onSave = { TaskRepository.updateTask(it) },
-                    onDelete = { TaskRepository.deleteTask(note) }
+                    onSave = { LocalReminderRepository.update(it) },
+                    onDelete = { LocalReminderRepository.delete(note) }
                 )
             }
 
-            // DELETE
             holder.delete.setOnClickListener {
-                TaskRepository.deleteTask(note)
+                LocalReminderRepository.delete(note)
             }
         }
 

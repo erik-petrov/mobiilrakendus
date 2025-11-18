@@ -2,6 +2,9 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
     <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" tools:targetApi="33" />
 
     <application
         android:allowBackup="true"
@@ -21,6 +24,9 @@
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+<!--            <receiver-->
+<!--                android:name=".notifications.TaskReminderReceiver"-->
+<!--                android:exported="false" />-->
         </activity>
     </application>
 

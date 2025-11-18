@@ -12,7 +12,7 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.honk.R
-import com.example.honk.data.TaskRepository
+import com.example.honk.local.LocalReminderRepository
 import com.example.honk.model.Reminder
 import com.example.honk.ui.categories.CategoryViewModel
 import java.text.SimpleDateFormat
@@ -81,12 +81,12 @@ class CalendarFragment : Fragment() {
                 TaskDialog.show(
                     fragment = this,
                     existing = reminder,
-                    onSave = { TaskRepository.updateTask(it) },
-                    onDelete = { TaskRepository.deleteTask(reminder) }
+                    onSave = { LocalReminderRepository.update(it) },
+                    onDelete = { LocalReminderRepository.delete(reminder) }
                 )
             },
             onDeleteClick = { reminder ->
-                TaskRepository.deleteTask(reminder)
+                LocalReminderRepository.delete(reminder)
             }
         )
         reminderList.layoutManager = LinearLayoutManager(requireContext())
@@ -125,17 +125,17 @@ class CalendarFragment : Fragment() {
                 TaskDialog.show(
                     fragment = this,
                     presetDate = selectedDate,
-                    onSave = { TaskRepository.addTask(it) }
+                    onSave = { LocalReminderRepository.add(it) }
                 )
             }
 
 
         // Observe global tasks and refresh list when anything changes
-        TaskRepository.tasks.observe(viewLifecycleOwner) {
+        LocalReminderRepository.reminders.observe(viewLifecycleOwner) {
             updateReminderList()
         }
 
-        TaskRepository.tasks.observe(viewLifecycleOwner) {
+        LocalReminderRepository.reminders.observe(viewLifecycleOwner) {
             updateCalendar()
         }
 
@@ -247,7 +247,7 @@ class CalendarFragment : Fragment() {
 
     private fun updateReminderList() {
         val currentDate = selectedDate ?: return
-        val all = TaskRepository.tasks.value ?: emptyList()
+        val all = LocalReminderRepository.reminders.value ?: emptyList()
         val filtered = all.filter { it.date == currentDate }
         reminderAdapter.setReminders(filtered)
     }

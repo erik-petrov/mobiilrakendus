@@ -8,6 +8,9 @@ data class Reminder(
     var text: String = "",
     var category: String = "",
     var isDone: Boolean = false,
-    var priority: String = "Medium"
+    var priority: String = "Medium",
+    // Unique id for this reminder (used for notifications)
+    var notificationId: Long = System.currentTimeMillis(),
+    var reminderOffset: ReminderOffset = ReminderOffset.NONE
 )
 

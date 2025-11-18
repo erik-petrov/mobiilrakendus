@@ -5,6 +5,7 @@ import androidx.room.PrimaryKey
 import androidx.room.Index
 import androidx.room.ForeignKey
 import androidx.room.ColumnInfo
+import com.google.firebase.firestore.PropertyName
 import java.util.*
 
 @Entity(
@@ -25,7 +26,9 @@ import java.util.*
     ]
 )
 data class TaskEntity(
-    @PrimaryKey val id: String = UUID.randomUUID().toString(),
+    @PrimaryKey
+    @get:PropertyName("id")
+    val id: String = UUID.randomUUID().toString(),
     @ColumnInfo(name = "folder_id") val folderId: String,
     val title: String,
     val description: String? = null,
@@ -37,5 +40,6 @@ data class TaskEntity(
     val location: String? = null,
     @ColumnInfo(name = "is_important") val isImportant: Boolean = false,
     @ColumnInfo(name = "created_at") val createdAt: Long = System.currentTimeMillis(),
-    @ColumnInfo(name = "updated_at") val updatedAt: Long = System.currentTimeMillis()
+    @ColumnInfo(name = "updated_at") val updatedAt: Long = System.currentTimeMillis(),
+    @ColumnInfo(name = "isSynced") val isSynced: Boolean = false
 )
