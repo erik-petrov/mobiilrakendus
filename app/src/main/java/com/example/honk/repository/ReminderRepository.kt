@@ -1,17 +1,13 @@
-package com.example.honk.data.repository
+package com.example.honk.repository
 
-import BaseFirestoreRepository
 import com.example.honk.data.entities.ReminderEntity
-import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.firestore.FirebaseFirestore
-import javax.inject.Inject
+import com.example.honk.data.firebase.FirebaseModule
 
-class ReminderRepository @Inject constructor(
-    firestore: FirebaseFirestore,
-    auth: FirebaseAuth
-) : BaseFirestoreRepository<ReminderEntity>(
-    rootCollection = firestore.collection("users")
-        .document(auth.currentUser?.uid ?: "")
+// repo for reminders stored in users/{uid}/reminders
+class ReminderRepository : BaseFirestoreRepository<ReminderEntity>(
+    rootCollection = FirebaseModule.firestore
+        .collection("users")
+        .document(FirebaseModule.auth.currentUser?.uid ?: "debug_user")
         .collection("reminders"),
     clazz = ReminderEntity::class.java
 )

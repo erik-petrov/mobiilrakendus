@@ -1,11 +1,11 @@
-package com.example.honk.data.repository
+package com.example.honk.repository
 
-import BaseFirestoreRepository
 import com.example.honk.data.entities.GooseSoundEntity
-import com.google.firebase.Firebase
-import com.google.firebase.firestore.firestore
+import com.example.honk.data.firebase.FirebaseModule
 
+// repo for global goose sounds stored in goose_sounds
 class GooseSoundRepository : BaseFirestoreRepository<GooseSoundEntity>(
-    rootCollection = Firebase.firestore.collection("goose_sounds"),
+    rootCollection = FirebaseModule.firestore
+        .collection("goose_sounds"),
     clazz = GooseSoundEntity::class.java
 )
