@@ -1,5 +1,6 @@
 package com.example.honk.repository
 
+import com.example.honk.model.Reminder
 import com.google.firebase.firestore.CollectionReference
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
@@ -39,4 +40,6 @@ abstract class BaseFirestoreRepository<T : Any>(
     open suspend fun delete(id: String) {
         rootCollection.document(id).delete().await()
     }
+
+    abstract fun add(note: Reminder)
 }

@@ -2,6 +2,7 @@ package com.example.honk
 
 import LocationViewModel
 import android.Manifest
+import android.content.ContentValues.TAG
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import androidx.navigation.fragment.NavHostFragment
@@ -10,15 +11,37 @@ import androidx.navigation.ui.setupWithNavController
 import com.example.honk.databinding.ActivityMainBinding
 import android.content.Context
 import android.content.pm.PackageManager
+import android.os.Build
+import android.util.Log
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.activity.result.launch
 import androidx.activity.viewModels
+import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatDelegate
+import androidx.compose.runtime.LaunchedEffect
 import androidx.core.content.ContextCompat
+import androidx.credentials.CredentialManager
+import androidx.credentials.GetCredentialRequest
+import androidx.credentials.exceptions.GetCredentialCancellationException
+import androidx.credentials.exceptions.GetCredentialCustomException
+import androidx.credentials.exceptions.GetCredentialException
+import androidx.credentials.exceptions.NoCredentialException
 import kotlin.getValue
 import androidx.lifecycle.Observer
+import androidx.lifecycle.lifecycleScope
+import com.example.honk.data.firebase.FirebaseModule.auth
+import com.google.android.libraries.identity.googleid.GetGoogleIdOption
+import com.google.android.libraries.identity.googleid.GetSignInWithGoogleOption
+import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
+import com.google.android.libraries.identity.googleid.GoogleIdTokenParsingException
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.time.delay
 // testing
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.GoogleAuthProvider
 import com.google.firebase.firestore.FirebaseFirestore
+import kotlinx.coroutines.launch
 
 
 class MainActivity : AppCompatActivity() {
@@ -34,6 +57,7 @@ class MainActivity : AppCompatActivity() {
         }
     private lateinit var binding: ActivityMainBinding
 
+    @RequiresApi(Build.VERSION_CODES.UPSIDE_DOWN_CAKE)
     override fun onCreate(savedInstanceState: Bundle?) {
         // testing
         val auth1 = FirebaseAuth.getInstance()
@@ -72,6 +96,37 @@ class MainActivity : AppCompatActivity() {
         locationViewModel.currentLocation.observe(this, Observer { location ->
             println(location)
         })
+
+        lifecycleScope.launch {
+            val nonce = "yGf0bNrjI1BxdZ6JQM2gIsePGlUUgHpuRVo7JC7LrMQgwbxlOj"
+            val webClientID = "415557290430-4a0vjq1aqudffb4bvh842h4nksp4llkl.apps.googleusercontent.com"
+            val googleIdOption: GetGoogleIdOption = GetGoogleIdOption.Builder()
+                .setFilterByAuthorizedAccounts(false)
+                .setServerClientId(webClientID)
+                .setAutoSelectEnabled(true)
+                // nonce string to use when generating a Google ID token
+                .setNonce(nonce)
+                .build()
+
+            val request: GetCredentialRequest = GetCredentialRequest.Builder()
+                .addCredentialOption(googleIdOption)
+                .build()
+
+            val e = signIn(request, applicationContext)
+            if (e is NoCredentialException) {
+                val googleIdOptionFalse: GetGoogleIdOption = GetGoogleIdOption.Builder()
+                    .setFilterByAuthorizedAccounts(false)
+                    .setServerClientId(webClientID)
+                    .setNonce(nonce)
+                    .build()
+
+                val requestFalse: GetCredentialRequest = GetCredentialRequest.Builder()
+                    .addCredentialOption(googleIdOptionFalse)
+                    .build()
+
+                signIn(requestFalse, applicationContext)
+            }
+        }
     }
 
     private fun checkAndRequestPermission(actionIfGranted: () -> Unit) {
@@ -88,5 +143,56 @@ class MainActivity : AppCompatActivity() {
 
     private fun startLocationUpdates() {
         locationViewModel.startLocationUpdates()
+    }
+
+    @RequiresApi(Build.VERSION_CODES.UPSIDE_DOWN_CAKE)
+    suspend fun signIn(request: GetCredentialRequest, context: Context): Exception? {
+        val credentialManager = CredentialManager.create(context)
+        val failureMessage = "Sign in failed!"
+        var e: Exception? = null
+        delay(250)
+        try {
+            val result = credentialManager.getCredential(
+                request = request,
+                context = context,
+            )
+
+            println("(☞ﾟヮﾟ)☞  Sign in Successful!  ☜(ﾟヮﾟ☜)")
+
+            val googleIdTokenCredential = GoogleIdTokenCredential.createFrom(result.credential.data)
+            firebaseAuthWithGoogle(googleIdTokenCredential.idToken)
+
+        } catch (e: GetCredentialException) {
+            println("$failureMessage: Failure getting credentials")
+
+        } catch (e: GoogleIdTokenParsingException) {
+            println("$failureMessage: Issue with parsing received GoogleIdToken")
+
+        } catch (e: NoCredentialException) {
+            println("$failureMessage: No credentials found")
+            return e
+
+        } catch (e: GetCredentialCustomException) {
+            println("$failureMessage: Issue with custom credential request")
+
+        } catch (e: GetCredentialCancellationException) {
+            println("$failureMessage: Sign-in was cancelled")
+        }
+        return e
+    }
+
+    private fun firebaseAuthWithGoogle(idToken: String) {
+        val credential = GoogleAuthProvider.getCredential(idToken, null)
+        auth.signInWithCredential(credential)
+            .addOnCompleteListener(this) { task ->
+                if (task.isSuccessful) {
+                    // Sign in success, update UI with the signed-in user's information
+                    Log.d(TAG, "signInWithCredential:success")
+                    val user = auth.currentUser
+                } else {
+                    // If sign in fails, display a message to the user
+                    Log.w(TAG, "signInWithCredential:failure", task.exception)
+                }
+            }
     }
 }

@@ -19,6 +19,7 @@ import android.widget.EditText
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import android.widget.ArrayAdapter
+import com.example.honk.repository.TaskRepository
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -27,6 +28,7 @@ class NotesFragment : Fragment() {
     private lateinit var notesRecycler: RecyclerView
     private lateinit var adapter: NotesAdapter
     private val notes = mutableListOf<Reminder>()  // reuse Reminder data class for now
+    private val tr = TaskRepository()
 
     private var filteredNotes = mutableListOf<Reminder>()
     private var activeDateFilter: String? = null
@@ -171,6 +173,7 @@ class NotesFragment : Fragment() {
                 category = category.ifBlank { "General" },
                 priority = priority.ifBlank { "Medium" }
             )
+
             notes.add(note)
 
             // If no filters are active, show all notes again
