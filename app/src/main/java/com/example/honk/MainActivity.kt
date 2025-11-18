@@ -19,6 +19,8 @@ import androidx.lifecycle.Observer
 // testing
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
+import com.example.honk.notifications.NotificationHelper
+
 
 
 class MainActivity : AppCompatActivity() {
@@ -34,6 +36,15 @@ class MainActivity : AppCompatActivity() {
         }
     private lateinit var binding: ActivityMainBinding
 
+    private val requestNotificationPermissionLauncher =
+        registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted: Boolean ->
+            if (isGranted) {
+                println("notification perm granted")
+            } else {
+                println("notification perm NOT granted")
+            }
+        }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         // testing
         val auth1 = FirebaseAuth.getInstance()
@@ -44,6 +55,11 @@ class MainActivity : AppCompatActivity() {
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
+        // Create notification channels (Android 8+)
+        NotificationHelper.createNotificationChannels(this)
+
+        // Ask for notification permission on Android 13+
+        checkAndRequestNotificationPermission()
         val navHostFragment =
             supportFragmentManager.findFragmentById(R.id.nav_host_fragment_activity_main) as NavHostFragment
         val navController = navHostFragment.navController
@@ -83,6 +99,19 @@ class MainActivity : AppCompatActivity() {
             actionIfGranted()
         } else {
             requestPermissionLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION)
+        }
+    }
+
+    private fun checkAndRequestNotificationPermission() {
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
+            val hasPermission = ContextCompat.checkSelfPermission(
+                this,
+                Manifest.permission.POST_NOTIFICATIONS
+            ) == PackageManager.PERMISSION_GRANTED
+
+            if (!hasPermission) {
+                requestNotificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+            }
         }
     }
 
