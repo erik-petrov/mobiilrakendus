@@ -1,18 +1,33 @@
 package com.example.honk
 
+import LocationViewModel
+import android.Manifest
 import android.os.Bundle
-import android.view.View
 import androidx.appcompat.app.AppCompatActivity
 import androidx.navigation.fragment.NavHostFragment
 import androidx.navigation.ui.AppBarConfiguration
-import androidx.navigation.ui.setupActionBarWithNavController
 import androidx.navigation.ui.setupWithNavController
 import com.example.honk.databinding.ActivityMainBinding
 import android.content.Context
+import android.content.pm.PackageManager
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatDelegate
+import androidx.core.content.ContextCompat
+import kotlin.getValue
+import androidx.lifecycle.Observer
 
 class MainActivity : AppCompatActivity() {
 
+    private val locationViewModel: LocationViewModel by viewModels()
+    private val requestPermissionLauncher =
+        registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted: Boolean ->
+            if (isGranted) {
+                println("loc perm granted")
+            } else {
+                println("loc perm NOT granted")
+            }
+        }
     private lateinit var binding: ActivityMainBinding
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -39,5 +54,30 @@ class MainActivity : AppCompatActivity() {
         AppCompatDelegate.setDefaultNightMode(nightMode)
 
         binding.navView.setupWithNavController(navController)
+
+        locationViewModel.initialize(applicationContext)
+
+        checkAndRequestPermission(::startLocationUpdates)
+
+        //sample for demo
+        locationViewModel.currentLocation.observe(this, Observer { location ->
+            println(location)
+        })
+    }
+
+    private fun checkAndRequestPermission(actionIfGranted: () -> Unit) {
+        if (ContextCompat.checkSelfPermission(
+                this,
+                Manifest.permission.ACCESS_FINE_LOCATION
+            ) == PackageManager.PERMISSION_GRANTED
+        ) {
+            actionIfGranted()
+        } else {
+            requestPermissionLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION)
+        }
+    }
+
+    private fun startLocationUpdates() {
+        locationViewModel.startLocationUpdates()
     }
 }

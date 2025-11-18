@@ -75,4 +75,13 @@ dependencies {
     // OkHttp logging
     implementation("com.squareup.okhttp3:logging-interceptor:4.12.0")
 
+    // Standard Kotlin Coroutines for ViewModelScope
+    implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.7.0")
+    implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.7.0")
+
+    // Google Play Services Location Library (Fused Location Provider Client)
+    implementation(libs.play.services.location)
+
+    // For requesting runtime permissions (Activity component)
+    implementation("androidx.activity:activity-ktx:1.8.2")
 }
