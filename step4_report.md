@@ -45,7 +45,8 @@ This ensures that basic UI interaction, form submission, and list updates work c
 
 - **Single image per reminder**: no support for multiple pictures or galleries.   
 - **UI scaling differences** may appear on devices with very small or large screens.  
-- **No full-size image viewer**: image preview cannot be enlarged.  
+- **No full-size image viewer**: image preview cannot be enlarged.
+- **Adding/taking photos**: photos can't be added to the reminders.
 - **Minimal camera error handling**: only simple Toast messages on failure.
 - **Database saving**: currently there's an ongoing bug with google.gms that limits out firestore DB usage possibilities.
 - **Task notification**: upcoming task notification isn't sent.
