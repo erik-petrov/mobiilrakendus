@@ -48,6 +48,7 @@ This ensures that basic UI interaction, form submission, and list updates work c
 - **No full-size image viewer**: image preview cannot be enlarged.  
 - **Minimal camera error handling**: only simple Toast messages on failure.
 - **Database saving**: currently there's an ongoing bug with google.gms that limits out firestore DB usage possibilities.
+- **Task notification**: upcoming task notification isn't sent.
 
 ---
 
