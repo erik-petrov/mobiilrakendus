@@ -11,8 +11,4 @@ class DndScheduleRepository :
             .collection("dnd_schedules"),
         clazz = DndScheduleEntity::class.java
     ) {
-
-    override suspend fun add(item: DndScheduleEntity) {
-        save(item.id, item)
-    }
 }

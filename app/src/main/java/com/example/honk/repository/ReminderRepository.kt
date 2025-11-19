@@ -11,8 +11,4 @@ class ReminderRepository :
             .collection("reminders"),
         clazz = ReminderEntity::class.java
     ) {
-
-    override suspend fun add(item: ReminderEntity) {
-        save(item.id, item)
-    }
 }

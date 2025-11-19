@@ -11,8 +11,4 @@ class LocationTriggerRepository :
             .collection("location_triggers"),
         clazz = LocationTriggerEntity::class.java
     ) {
-
-    override suspend fun add(item: LocationTriggerEntity) {
-        save(item.id, item)
-    }
 }

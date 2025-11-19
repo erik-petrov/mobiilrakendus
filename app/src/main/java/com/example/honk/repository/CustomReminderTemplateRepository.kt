@@ -12,8 +12,4 @@ class CustomReminderTemplateRepository :
             .collection("custom_reminder_templates"),
         clazz = CustomReminderTemplateEntity::class.java
     ) {
-
-    override suspend fun add(item: CustomReminderTemplateEntity) {
-        save(item.id, item)
-    }
 }

@@ -16,10 +16,6 @@ class UserRepository :
         throw UnsupportedOperationException("Fetching ALL users is not supported on client.")
     }
 
-    override suspend fun add(item: UserEntity) {
-        throw UnsupportedOperationException("Client cannot add new users.")
-    }
-
     fun getCurrentUser(): Flow<UserEntity?> = callbackFlow {
         val uid = FirebaseModule.auth.currentUser?.uid
 

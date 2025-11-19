@@ -9,8 +9,4 @@ class GooseSoundRepository :
             .collection("goose_sounds"),
         clazz = GooseSoundEntity::class.java
     ) {
-
-    override suspend fun add(item: GooseSoundEntity) {
-        save(item.id, item)
-    }
 }

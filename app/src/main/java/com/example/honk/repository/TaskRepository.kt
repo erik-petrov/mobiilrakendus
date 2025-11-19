@@ -11,8 +11,4 @@ class TaskRepository :
             .collection("tasks"),
         clazz = TaskEntity::class.java
     ) {
-
-    override suspend fun add(item: TaskEntity) {
-        save(item.id, item)
-    }
 }

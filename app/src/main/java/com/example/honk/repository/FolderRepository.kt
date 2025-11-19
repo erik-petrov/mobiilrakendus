@@ -11,8 +11,4 @@ class FolderRepository :
             .collection("folders"),
         clazz = FolderEntity::class.java
     ) {
-
-    override suspend fun add(item: FolderEntity) {
-        save(item.id, item)
-    }
 }

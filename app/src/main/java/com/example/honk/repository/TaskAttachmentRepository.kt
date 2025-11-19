@@ -11,8 +11,4 @@ class TaskAttachmentRepository :
             .collection("task_attachments"),
         clazz = TaskAttachmentEntity::class.java
     ) {
-
-    override suspend fun add(item: TaskAttachmentEntity) {
-        save(item.id, item)
-    }
 }
