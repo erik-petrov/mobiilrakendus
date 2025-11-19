@@ -88,8 +88,7 @@ dependencies {
 
     // Google Play Services Location Library (Fused Location Provider Client)
     implementation(libs.play.services.location)
-    implementation("com.google.android.gms:play-services-auth:21.4.0")
-
+    implementation(libs.play.services.auth)
 
     // For requesting runtime permissions (Activity component)
     implementation("androidx.activity:activity-ktx:1.8.2")
