@@ -50,7 +50,7 @@ This ensures that basic UI interaction, form submission, and list updates work c
 
 ---
 
-## 3. APK Build Process *(placeholder)*
+## 3. APK Build Process
 
 
 
