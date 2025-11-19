@@ -47,12 +47,19 @@ This ensures that basic UI interaction, form submission, and list updates work c
 - **UI scaling differences** may appear on devices with very small or large screens.  
 - **No full-size image viewer**: image preview cannot be enlarged.  
 - **Minimal camera error handling**: only simple Toast messages on failure.
+- **Database saving**: currently there's an ongoing bug with google.gms that limits out firestore DB usage possibilities.
 
 ---
 
 ## 3. APK Build Process
 
+1. Launch Android Studio
+2. Go to Build -> Generate Signed Bundle/APK
+3. Choose APK
+4. Create/Add your signing key
+5. Choose build variant
 
+This will produce a build of the app in the directory specified.
 
 ---
 
@@ -60,4 +67,4 @@ This ensures that basic UI interaction, form submission, and list updates work c
 
 The testing strategy covers both logic (unit tests) and real user interaction (UI tests).  
 The implemented tests validate the core reminder workflow and ensure stable behavior of the Add Reminder dialog.  
-Current limitations mostly relate to prototype-level architecture and can be improved in the future iteration.
+Current limitations mostly relate to prototype-level architecture and can be improved in the future iteration, but also a bug touches our DB infrastructure.
