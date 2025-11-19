@@ -1,4 +1,5 @@
 package com.example.honk.model
+
 import java.util.UUID
 
 data class Reminder(
@@ -9,8 +10,10 @@ data class Reminder(
     var category: String = "",
     var isDone: Boolean = false,
     var priority: String = "Medium",
+
     // Unique id for this reminder (used for notifications)
     var notificationId: Long = System.currentTimeMillis(),
-    var reminderOffset: ReminderOffset = ReminderOffset.NONE
-)
+    var reminderOffset: ReminderOffset = ReminderOffset.NONE,
 
+    var imageUri: String? = null
+)

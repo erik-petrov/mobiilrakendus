@@ -7,14 +7,28 @@
     android:paddingHorizontal="12dp"
     android:paddingVertical="8dp">
 
-    <TextView
-        android:id="@+id/reminderText"
+    <LinearLayout
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_weight="1"
-        android:text="10:00 – Feed the goose"
-        android:textSize="16sp"
-        android:textColor="@android:color/black" />
+        android:orientation="vertical"
+        android:layout_weight="1">
+
+        <TextView
+            android:id="@+id/reminderText"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="10:00 – Feed the goose"
+            android:textSize="16sp"
+            android:textColor="@android:color/black" />
+
+        <ImageView
+            android:id="@+id/reminderImage"
+            android:layout_width="match_parent"
+            android:layout_height="120dp"
+            android:layout_marginTop="4dp"
+            android:scaleType="centerCrop"
+            android:visibility="gone" />
+    </LinearLayout>
 
     <ImageButton
         android:id="@+id/deleteButton"
@@ -24,4 +38,30 @@
         android:src="@android:drawable/ic_menu_delete"
         android:contentDescription="Delete reminder"
         app:tint="#F44336" />
+
 </LinearLayout>
+
+<!--    <TextView-->
+<!--        android:id="@+id/reminderText"-->
+<!--        android:layout_width="0dp"-->
+<!--        android:layout_height="wrap_content"-->
+<!--        android:layout_weight="1"-->
+<!--        android:text="10:00 – Feed the goose"-->
+<!--        android:textSize="16sp"-->
+<!--        android:textColor="@android:color/black" />-->
+
+<!--    <ImageView-->
+<!--        android:id="@+id/reminderImage"-->
+<!--        android:layout_width="match_parent"-->
+<!--        android:layout_height="120dp"-->
+<!--        android:scaleType="centerCrop"-->
+<!--        android:visibility="gone" />-->
+
+<!--    <ImageButton-->
+<!--        android:id="@+id/deleteButton"-->
+<!--        android:layout_width="32dp"-->
+<!--        android:layout_height="32dp"-->
+<!--        android:background="@android:color/transparent"-->
+<!--        android:src="@android:drawable/ic_menu_delete"-->
+<!--        android:contentDescription="Delete reminder"-->
+<!--        app:tint="#F44336" />-->
