@@ -42,6 +42,7 @@ android {
 }
 
 dependencies {
+    implementation(platform(libs.firebase.bom))
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.appcompat)
@@ -54,9 +55,9 @@ dependencies {
     implementation(libs.androidx.monitor)
     implementation(libs.google.googleid)
     implementation(libs.androidx.runtime)
-//    implementation(libs.firebase.firestore.ktx)
-//    implementation(libs.firebase.firestore)
-//    implementation(libs.firebase.auth.ktx)
+    implementation(libs.firebase.firestore.ktx)
+    implementation(libs.firebase.firestore)
+    implementation(libs.firebase.auth.ktx)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
@@ -92,12 +93,4 @@ dependencies {
 
     // For requesting runtime permissions (Activity component)
     implementation("androidx.activity:activity-ktx:1.8.2")
-
-    // Import the Firebase BoM
-    implementation(libs.firebase.bom)
-
-    // Add the dependencies for Firebase products you want to use
-    // When using the BoM, don't specify versions in Firebase dependencies
-    implementation("com.google.firebase:firebase-auth-ktx:23.2.1")
-    implementation("com.google.firebase:firebase-firestore-ktx:25.1.4")
 }

@@ -29,6 +29,7 @@ import androidx.credentials.exceptions.NoCredentialException
 import kotlin.getValue
 import androidx.lifecycle.Observer
 import androidx.lifecycle.lifecycleScope
+import com.example.honk.data.entities.UserEntity
 import com.example.honk.data.firebase.FirebaseModule.auth
 import com.google.android.libraries.identity.googleid.GetGoogleIdOption
 import com.google.android.libraries.identity.googleid.GetSignInWithGoogleOption
@@ -42,6 +43,8 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.GoogleAuthProvider
 import com.google.firebase.firestore.FirebaseFirestore
 import com.example.honk.notifications.NotificationHelper
+import com.example.honk.repository.UserRepository
+import kotlinx.coroutines.flow.first
 
 import kotlinx.coroutines.launch
 
@@ -115,7 +118,7 @@ class MainActivity : AppCompatActivity() {
 
         lifecycleScope.launch {
             val nonce = "yGf0bNrjI1BxdZ6JQM2gIsePGlUUgHpuRVo7JC7LrMQgwbxlOj"
-            val webClientID = "415557290430-4a0vjq1aqudffb4bvh842h4nksp4llkl.apps.googleusercontent.com"
+            val webClientID = getString(R.string.default_web_client_id)
             val googleIdOption: GetGoogleIdOption = GetGoogleIdOption.Builder()
                 .setFilterByAuthorizedAccounts(false)
                 .setServerClientId(webClientID)
@@ -217,7 +220,24 @@ class MainActivity : AppCompatActivity() {
                 if (task.isSuccessful) {
                     // Sign in success, update UI with the signed-in user's information
                     Log.d(TAG, "signInWithCredential:success")
-                    val user = auth.currentUser
+
+                    //create user profile in firestore
+                    val firebaseUser = auth.currentUser
+                    lifecycleScope.launch {
+                    val fetchedUser = UserRepository().getById(firebaseUser!!.uid).first()
+                    if (fetchedUser?.id != firebaseUser.uid) {
+                        val userProfile = UserEntity(
+                            id = firebaseUser.uid,
+                            username = firebaseUser.displayName ?: "",
+                            email = firebaseUser.email ?: "",
+                            authProvider = "google",
+                            googleId = firebaseUser.uid,
+                            storagePreference = "default",
+                            defaultSoundId = "default"
+                        )
+                         UserRepository().save(firebaseUser.uid, userProfile) }
+                        Log.d(TAG, "signUpWithCredential:success")
+                    }
                 } else {
                     // If sign in fails, display a message to the user
                     Log.w(TAG, "signInWithCredential:failure", task.exception)

@@ -40,6 +40,4 @@ abstract class BaseFirestoreRepository<T : Any>(
     open suspend fun delete(id: String) {
         rootCollection.document(id).delete().await()
     }
-
-    abstract fun add(note: Reminder)
 }
