@@ -6,18 +6,20 @@ import com.example.honk.data.firebase.FirebaseModule
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.callbackFlow
 
-// firestore based repository for user profiles stored in users/{uid}
-class UserRepository : BaseFirestoreRepository<UserEntity>(
-    rootCollection = FirebaseModule.firestore.collection("users"),
-    clazz = UserEntity::class.java
-) {
+class UserRepository :
+    BaseFirestoreRepository<UserEntity>(
+        rootCollection = FirebaseModule.firestore.collection("users"),
+        clazz = UserEntity::class.java
+    ) {
 
-    // overridden to prevent fetching ALL users from client-side code
     override fun getAll(): Flow<List<UserEntity>> {
         throw UnsupportedOperationException("Fetching ALL users is not supported on client.")
     }
 
-    // listen to the currently logged in user's document users/{uid}
+    override suspend fun add(item: UserEntity) {
+        throw UnsupportedOperationException("Client cannot add new users.")
+    }
+
     fun getCurrentUser(): Flow<UserEntity?> = callbackFlow {
         val uid = FirebaseModule.auth.currentUser?.uid
 

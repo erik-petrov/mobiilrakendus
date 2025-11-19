@@ -18,7 +18,7 @@ interface CustomReminderTemplateDao {
 
     // Getting user templates
     @Query("SELECT * FROM custom_reminder_templates WHERE user_id = :userId")
-    fun getTemplatesByUser(userId: String): Flow<List<CustomReminderTemplateDao>>
+    fun getTemplatesByUser(userId: String): Flow<List<CustomReminderTemplateEntity>>
 
     // Getting a template by ID
     @Query("SELECT * FROM custom_reminder_templates WHERE id = :templateId")

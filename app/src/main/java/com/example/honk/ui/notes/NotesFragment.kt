@@ -1,36 +1,34 @@
 package com.example.honk.ui.notes
 
+import android.app.AlertDialog
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Button
 import android.widget.CheckBox
+import android.widget.ImageButton
+import android.widget.Spinner
 import android.widget.TextView
+import android.widget.ArrayAdapter
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.Observer
+import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.honk.R
+import com.example.honk.local.LocalReminderRepository
 import com.example.honk.model.Reminder
+import com.example.honk.ui.categories.CategoryViewModel
+import com.example.honk.ui.dialogs.TaskDialog
 import com.google.android.material.floatingactionbutton.FloatingActionButton
-import android.widget.ImageButton
-import android.widget.Spinner
-import android.widget.Button
-import android.widget.EditText
-import android.widget.Toast
-import androidx.appcompat.app.AlertDialog
-import android.widget.ArrayAdapter
-import com.example.honk.repository.TaskRepository
-import java.text.SimpleDateFormat
-import java.util.*
 
 class NotesFragment : Fragment() {
 
     private lateinit var notesRecycler: RecyclerView
     private lateinit var adapter: NotesAdapter
-    private val notes = mutableListOf<Reminder>()  // reuse Reminder data class for now
-    private val tr = TaskRepository()
+    private lateinit var categoryViewModel: CategoryViewModel
 
-    private var filteredNotes = mutableListOf<Reminder>()
     private var activeDateFilter: String? = null
     private var activeCategoryFilter: String? = null
     private var activePriorityFilter: String? = null
@@ -41,73 +39,75 @@ class NotesFragment : Fragment() {
     ): View? {
         val view = inflater.inflate(R.layout.fragment_notes, container, false)
 
+        categoryViewModel =
+            ViewModelProvider(requireActivity())[CategoryViewModel::class.java]
+
         notesRecycler = view.findViewById(R.id.notesRecycler)
         notesRecycler.layoutManager = LinearLayoutManager(requireContext())
-        adapter = NotesAdapter(notes)
+
+        adapter = NotesAdapter(mutableListOf())
         notesRecycler.adapter = adapter
 
-        val fabAdd = view.findViewById<FloatingActionButton>(R.id.fab_add_note)
-        fabAdd.setOnClickListener { showAddNoteDialog() }
+        // Observe global reminder list
+        LocalReminderRepository.reminders.observe(viewLifecycleOwner, Observer {
+            applyFilters()
+        })
 
-        val filterButton = view.findViewById<ImageButton>(R.id.filterButton)
-        filterButton.setOnClickListener { showFilterDialog() }
+        // Add note (using TaskDialog)
+        view.findViewById<FloatingActionButton>(R.id.fab_add_note)
+            .setOnClickListener {
+                TaskDialog.show(
+                    fragment = this,
+                    onSave = { task -> LocalReminderRepository.add(task) }
+                )
+            }
+
+        view.findViewById<ImageButton>(R.id.filterButton)
+            .setOnClickListener { showFilterDialog() }
 
         return view
     }
 
-    private fun addDummyNote() {
-        // Temporary test data until you add real input later
-        val note = Reminder(
-            date = "7 Oct",
-            time = "",
-            text = "Goose picture",
-            category = "HOME"
-        )
-        notes.add(note)
-        adapter.notifyItemInserted(notes.size - 1)
-    }
+    // FILTERING
+    private fun applyFilters() {
+        val all = LocalReminderRepository.reminders.value ?: emptyList()
 
-    private fun normalizeDate(input: String): String {
-        val possibleFormats = listOf(
-            "dd.MM.yyyy", "d.MM.yyyy",
-            "dd.MM", "d.MM",
-            "dd MMM", "d MMM",
-            "yyyy-MM-dd", "yyyy/MM/dd"
-        )
+        val filtered = all.filter { note ->
+            val matchDate = activeDateFilter?.let { note.date == it } ?: true
+            val matchCategory = activeCategoryFilter?.let {
+                note.category.equals(it, ignoreCase = true)
+            } ?: true
+            val matchPriority = activePriorityFilter?.let {
+                note.priority.equals(it, ignoreCase = true)
+            } ?: true
 
-        for (format in possibleFormats) {
-            try {
-                val parsed = java.text.SimpleDateFormat(format, Locale.getDefault()).parse(input)
-                if (parsed != null) {
-                    // Always reformat to European standard
-                    return java.text.SimpleDateFormat("dd.MM.yyyy", Locale.getDefault()).format(parsed)
-                }
-            } catch (_: Exception) {
-            }
+            matchDate && matchCategory && matchPriority
         }
-        return input.trim()
+
+        adapter.updateData(filtered)
     }
 
     private fun showFilterDialog() {
         val dialogView = layoutInflater.inflate(R.layout.dialog_filter_notes, null)
+
         val dateSpinner = dialogView.findViewById<Spinner>(R.id.filterDateSpinner)
         val categorySpinner = dialogView.findViewById<Spinner>(R.id.filterCategorySpinner)
         val prioritySpinner = dialogView.findViewById<Spinner>(R.id.filterPrioritySpinner)
         val applyButton = dialogView.findViewById<Button>(R.id.applyFilterButton)
 
-        // example adapter setup – you can replace these with dynamic lists later
-        dateSpinner.adapter = ArrayAdapter(requireContext(), android.R.layout.simple_spinner_dropdown_item,
-            listOf("All", "07.10.2025", "08.10.2025", "09.10.2025"))
-        categorySpinner.adapter = ArrayAdapter(requireContext(), android.R.layout.simple_spinner_dropdown_item,
-            listOf("All", "Home", "Work", "Personal"))
-        prioritySpinner.adapter = ArrayAdapter(requireContext(), android.R.layout.simple_spinner_dropdown_item,
-            listOf("All", "High", "Medium", "Low"))
+        val list = LocalReminderRepository.reminders.value ?: emptyList()
+
+        val dates = listOf("All") + list.map { it.date }.distinct()
+        val categories = listOf("All") + list.map { it.category }.filter { it.isNotBlank() }.distinct()
+        val priorities = listOf("All", "High", "Medium", "Low")
+
+        dateSpinner.adapter = ArrayAdapter(requireContext(), android.R.layout.simple_spinner_dropdown_item, dates)
+        categorySpinner.adapter = ArrayAdapter(requireContext(), android.R.layout.simple_spinner_dropdown_item, categories)
+        prioritySpinner.adapter = ArrayAdapter(requireContext(), android.R.layout.simple_spinner_dropdown_item, priorities)
 
         val dialog = AlertDialog.Builder(requireContext())
             .setView(dialogView)
-            .setCancelable(true)
             .create()
-        dialog.window?.setBackgroundDrawableResource(android.R.color.transparent)
 
         applyButton.setOnClickListener {
             activeDateFilter = dateSpinner.selectedItem.toString().takeIf { it != "All" }
@@ -121,86 +121,15 @@ class NotesFragment : Fragment() {
         dialog.show()
     }
 
-    private fun applyFilters() {
-        val hasFilter = activeDateFilter != null || activeCategoryFilter != null || activePriorityFilter != null
-
-        if (hasFilter) {
-            filteredNotes.clear()
-            filteredNotes.addAll(
-                notes.filter { note ->
-                    val matchDate = activeDateFilter?.let {
-                        normalizeDate(note.date) == normalizeDate(it)
-                    } ?: true
-                    val matchCategory = activeCategoryFilter?.let {
-                        note.category.equals(it, true)
-                    } ?: true
-                    val matchPriority = activePriorityFilter?.let {
-                        note.priority.equals(it, ignoreCase = true)
-                    } ?: true
-                    matchDate && matchCategory && matchPriority
-                }
-            )
-            adapter.updateData(filteredNotes)
-        } else {
-            adapter.restoreAll()  // restores all notes again
-        }
-    }
-
-    private fun showAddNoteDialog() {
-        val dialogView = layoutInflater.inflate(R.layout.dialog_add_note, null)
-        val noteText = dialogView.findViewById<EditText>(R.id.noteText)
-        val noteDate = dialogView.findViewById<EditText>(R.id.noteDate)
-        val noteCategory = dialogView.findViewById<EditText>(R.id.noteCategory)
-        val notePriority = dialogView.findViewById<EditText>(R.id.notePriority)
-        val addButton = dialogView.findViewById<Button>(R.id.addNoteButton)
-
-        val dialog = AlertDialog.Builder(requireContext())
-            .setView(dialogView)
-            .setCancelable(true)
-            .create()
-        dialog.window?.setBackgroundDrawableResource(android.R.color.transparent)
-
-        addButton.setOnClickListener {
-            val text = noteText.text.toString().ifBlank { "(empty)" }
-            val date = normalizeDate(noteDate.text.toString())
-            val category = noteCategory.text.toString()
-            val priority = notePriority.text.toString()
-
-            val note = Reminder(
-                date = date,
-                time = "",
-                text = text,
-                category = category.ifBlank { "General" },
-                priority = priority.ifBlank { "Medium" }
-            )
-
-            notes.add(note)
-
-            // If no filters are active, show all notes again
-            if (activeDateFilter == null && activeCategoryFilter == null && activePriorityFilter == null) {
-                adapter.restoreAll()
-            } else {
-                applyFilters() // reapply filters so new note appears if it matches
-            }
-
-            dialog.dismiss()
-
-        }
-
-        dialog.show()
-    }
-
-
-    // Simple adapter for displaying notes
-    inner class NotesAdapter(private val allNotes: MutableList<Reminder>) :
+    // ADAPTER
+    inner class NotesAdapter(private val displayed: MutableList<Reminder>) :
         RecyclerView.Adapter<NotesAdapter.NoteViewHolder>() {
 
-        // This list holds what is actually displayed (filtered or full)
-        private val displayedData = mutableListOf<Reminder>().apply { addAll(allNotes) }
-
         inner class NoteViewHolder(view: View) : RecyclerView.ViewHolder(view) {
-            val checkBox: CheckBox = view.findViewById(R.id.noteCheckBox)
             val text: TextView = view.findViewById(R.id.noteText)
+            val checkBox: CheckBox = view.findViewById(R.id.noteCheckBox)
+            val edit: ImageButton = view.findViewById(R.id.editNoteButton)
+            val delete: ImageButton = view.findViewById(R.id.deleteNoteButton)
         }
 
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): NoteViewHolder {
@@ -210,23 +139,36 @@ class NotesFragment : Fragment() {
         }
 
         override fun onBindViewHolder(holder: NoteViewHolder, position: Int) {
-            val note = displayedData[position]
+            val note = displayed[position]
+
             holder.text.text = "${note.date}: ${note.text}"
-            holder.checkBox.isChecked = false
+            holder.checkBox.isChecked = note.isDone
+
+            holder.checkBox.setOnCheckedChangeListener { _, checked ->
+                note.isDone = checked
+                LocalReminderRepository.update(note)
+            }
+
+            holder.edit.setOnClickListener {
+                TaskDialog.show(
+                    fragment = this@NotesFragment,
+                    existing = note,
+                    onSave = { LocalReminderRepository.update(it) },
+                    onDelete = { LocalReminderRepository.delete(note) }
+                )
+            }
+
+            holder.delete.setOnClickListener {
+                LocalReminderRepository.delete(note)
+            }
         }
 
-        override fun getItemCount() = displayedData.size
+        override fun getItemCount() = displayed.size
 
-        // Called when a filter is applied
         fun updateData(newData: List<Reminder>) {
-            displayedData.clear()
-            displayedData.addAll(newData)
+            displayed.clear()
+            displayed.addAll(newData)
             notifyDataSetChanged()
-        }
-
-        // Called when filters are cleared
-        fun restoreAll() {
-            updateData(allNotes)
         }
     }
 }

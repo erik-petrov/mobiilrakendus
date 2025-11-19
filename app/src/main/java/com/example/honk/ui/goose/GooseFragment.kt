@@ -17,10 +17,6 @@ import kotlinx.coroutines.launch
 import android.widget.ImageButton
 import kotlinx.coroutines.runBlocking
 import androidx.navigation.fragment.findNavController
-// for testing
-import com.example.honk.notifications.NotificationHelper
-import android.widget.Button
-import android.widget.Toast
 
 class GooseFragment : Fragment() {
 
@@ -65,17 +61,6 @@ class GooseFragment : Fragment() {
 
         gooseImage.setOnClickListener {
             honkGoose()
-        }
-
-        val testButton = view.findViewById<Button>(R.id.testNotificationButton)
-        testButton.setOnClickListener {
-            Toast.makeText(requireContext(), "Test button clicked", Toast.LENGTH_SHORT).show()
-
-            NotificationHelper.showSimpleNotification(
-                requireContext(),
-                title = "HONK reminder",
-                message = "This is a test notification from HONK."
-            )
         }
 
         return view

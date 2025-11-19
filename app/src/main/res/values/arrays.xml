@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- Unified category list for the whole app -->
+    <string-array name="app_categories">
+        <item>No category</item>
+        <item>WORK</item>
+        <item>SCHOOL</item>
+        <item>HOME</item>
+        <item>PETS</item>
+        <item>HOLIDAY</item>
+        <item>GENERAL</item>
+    </string-array>
+
+    <string-array name="remind_before_options">
+        <item>No reminder</item>
+        <item>1 hour before</item>
+        <item>2 hours before</item>
+        <item>1 day before</item>
+        <item>2 days before</item>
+        <item>1 week before</item>
+    </string-array>
+
+</resources>

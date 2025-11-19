@@ -29,7 +29,6 @@ import androidx.credentials.exceptions.NoCredentialException
 import kotlin.getValue
 import androidx.lifecycle.Observer
 import androidx.lifecycle.lifecycleScope
-import com.example.honk.data.entities.UserEntity
 import com.example.honk.data.firebase.FirebaseModule.auth
 import com.google.android.libraries.identity.googleid.GetGoogleIdOption
 import com.google.android.libraries.identity.googleid.GetSignInWithGoogleOption
@@ -45,6 +44,8 @@ import com.google.firebase.firestore.FirebaseFirestore
 import com.example.honk.notifications.NotificationHelper
 import com.example.honk.repository.UserRepository
 import kotlinx.coroutines.flow.first
+import android.app.AlarmManager
+import android.provider.Settings
 
 import kotlinx.coroutines.launch
 
@@ -71,6 +72,18 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
+    private fun checkAndRequestExactAlarmPermission() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) { // Android 12+
+            val alarmManager = getSystemService(AlarmManager::class.java)
+            val canSchedule = alarmManager.canScheduleExactAlarms()
+            if (!canSchedule) {
+                // Открываем системный экран, где юзер включает "Allow exact alarms" для нашего приложения
+                val intent = android.content.Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM)
+                startActivity(intent)
+            }
+        }
+    }
+
     @RequiresApi(Build.VERSION_CODES.UPSIDE_DOWN_CAKE)
     override fun onCreate(savedInstanceState: Bundle?) {
         // testing
@@ -82,11 +95,6 @@ class MainActivity : AppCompatActivity() {
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        // Create notification channels (Android 8+)
-        NotificationHelper.createNotificationChannels(this)
-
-        // Ask for notification permission on Android 13+
-        checkAndRequestNotificationPermission()
         val navHostFragment =
             supportFragmentManager.findFragmentById(R.id.nav_host_fragment_activity_main) as NavHostFragment
         val navController = navHostFragment.navController
@@ -110,6 +118,14 @@ class MainActivity : AppCompatActivity() {
         locationViewModel.initialize(applicationContext)
 
         checkAndRequestPermission(::startLocationUpdates)
+
+        // Create notification channels (Android 8+)
+        NotificationHelper.createNotificationChannels(this)
+
+        // Ask for notification permission on Android 13+
+        checkAndRequestNotificationPermission()
+
+        checkAndRequestExactAlarmPermission()
 
         //sample for demo
         locationViewModel.currentLocation.observe(this, Observer { location ->
