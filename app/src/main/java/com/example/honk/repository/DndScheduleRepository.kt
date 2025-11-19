@@ -1,18 +1,18 @@
 package com.example.honk.repository
 
-import com.example.honk.data.entities.FolderEntity
+import com.example.honk.data.entities.DndScheduleEntity
 import com.example.honk.data.firebase.FirebaseModule
 
-class FolderRepository :
-    BaseFirestoreRepository<FolderEntity>(
+class DndScheduleRepository :
+    BaseFirestoreRepository<DndScheduleEntity>(
         rootCollection = FirebaseModule.firestore
             .collection("users")
             .document(FirebaseModule.auth.currentUser?.uid ?: "debug_user")
-            .collection("folders"),
-        clazz = FolderEntity::class.java
+            .collection("dnd_schedules"),
+        clazz = DndScheduleEntity::class.java
     ) {
 
-    override suspend fun add(item: FolderEntity) {
+    override suspend fun add(item: DndScheduleEntity) {
         save(item.id, item)
     }
 }

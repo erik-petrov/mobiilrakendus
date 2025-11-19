@@ -76,10 +76,19 @@ class GooseFragment : Fragment() {
         gooseImage.removeCallbacks(xpDecayRunnable)
     }
 
-    private fun updateJokeText(){
+    private fun updateJokeText() {
         lifecycleScope.launch {
-            val jk = jr.fetchShortJoke()
-            jokeText.text = if (!jk.isEmpty()) jk else "ASCII silly question, get a silly ANSI." //fallback
+            try {
+                val jk = jr.fetchShortJoke()
+                jokeText.text = if (jk.isNotEmpty()) {
+                    jk
+                } else {
+                    "ASCII silly question, get a silly ANSI."
+                }
+            } catch (e: Exception) {
+                jokeText.text = "No joke this time :("
+                e.printStackTrace()
+            }
         }
     }
 

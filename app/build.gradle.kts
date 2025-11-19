@@ -1,6 +1,8 @@
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
+//    alias(libs.plugins.google.gms.google.services)
+    id("com.google.gms.google-services")
 }
 
 android {
@@ -36,6 +38,7 @@ android {
     buildFeatures {
         viewBinding = true
     }
+    buildToolsVersion = "36.1.0"
 }
 
 dependencies {
@@ -49,8 +52,11 @@ dependencies {
     implementation(libs.androidx.navigation.fragment.ktx)
     implementation(libs.androidx.navigation.ui.ktx)
     implementation(libs.androidx.monitor)
-    // implementation(libs.navigation.fragment.ktx)
-    // implementation(libs.navigation.ui.ktx)
+    implementation(libs.google.googleid)
+    implementation(libs.androidx.runtime)
+//    implementation(libs.firebase.firestore.ktx)
+//    implementation(libs.firebase.firestore)
+//    implementation(libs.firebase.auth.ktx)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
@@ -75,4 +81,23 @@ dependencies {
     // OkHttp logging
     implementation("com.squareup.okhttp3:logging-interceptor:4.12.0")
 
+    // Standard Kotlin Coroutines for ViewModelScope
+    implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.7.0")
+    implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.7.0")
+
+    // Google Play Services Location Library (Fused Location Provider Client)
+    implementation(libs.play.services.location)
+    implementation("com.google.android.gms:play-services-auth:21.4.0")
+
+
+    // For requesting runtime permissions (Activity component)
+    implementation("androidx.activity:activity-ktx:1.8.2")
+
+    // Import the Firebase BoM
+    implementation(libs.firebase.bom)
+
+    // Add the dependencies for Firebase products you want to use
+    // When using the BoM, don't specify versions in Firebase dependencies
+    implementation("com.google.firebase:firebase-auth-ktx:23.2.1")
+    implementation("com.google.firebase:firebase-firestore-ktx:25.1.4")
 }

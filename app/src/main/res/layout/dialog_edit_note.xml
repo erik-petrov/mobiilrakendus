@@ -7,39 +7,51 @@
     android:background="@drawable/dialog_bg">
 
     <EditText
-        android:id="@+id/noteText"
+        android:id="@+id/editNoteText"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:hint="Note text" />
 
     <EditText
-        android:id="@+id/noteDate"
+        android:id="@+id/editNoteDate"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:hint="Select date"
         android:focusable="false"
         android:clickable="true"
-        android:inputType="none"
         android:layout_marginTop="8dp" />
 
-    <!-- Category dropdown instead of free text -->
     <Spinner
-        android:id="@+id/noteCategorySpinner"
+        android:id="@+id/editNoteCategorySpinner"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="8dp" />
 
-    <EditText
-        android:id="@+id/notePriority"
+    <Spinner
+        android:id="@+id/editNotePrioritySpinner"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:hint="Priority (optional)"
         android:layout_marginTop="8dp" />
 
-    <Button
-        android:id="@+id/addNoteButton"
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Add"
-        android:layout_marginTop="12dp" />
+        android:orientation="horizontal"
+        android:gravity="end"
+        android:layout_marginTop="12dp">
+
+        <Button
+            android:id="@+id/deleteNoteButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Delete" />
+
+        <Button
+            android:id="@+id/saveNoteButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Save"
+            android:layout_marginStart="12dp" />
+    </LinearLayout>
+
 </LinearLayout>
