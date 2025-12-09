@@ -132,133 +132,135 @@ class MainActivity : AppCompatActivity() {
         locationViewModel.currentLocation.observe(this, Observer { location ->
             println(location)
         })
+/*
+lifecycleScope.launch {
+    val nonce = "yGf0bNrjI1BxdZ6JQM2gIsePGlUUgHpuRVo7JC7LrMQgwbxlOj"
+    val webClientID = getString(R.string.default_web_client_id)
+    val googleIdOption: GetGoogleIdOption = GetGoogleIdOption.Builder()
+        .setFilterByAuthorizedAccounts(false)
+        .setServerClientId(webClientID)
+        .setAutoSelectEnabled(true)
+        // nonce string to use when generating a Google ID token
+        .setNonce(nonce)
+        .build()
 
-        lifecycleScope.launch {
-            val nonce = "yGf0bNrjI1BxdZ6JQM2gIsePGlUUgHpuRVo7JC7LrMQgwbxlOj"
-            val webClientID = getString(R.string.default_web_client_id)
-            val googleIdOption: GetGoogleIdOption = GetGoogleIdOption.Builder()
-                .setFilterByAuthorizedAccounts(false)
-                .setServerClientId(webClientID)
-                .setAutoSelectEnabled(true)
-                // nonce string to use when generating a Google ID token
-                .setNonce(nonce)
-                .build()
+    val request: GetCredentialRequest = GetCredentialRequest.Builder()
+        .addCredentialOption(googleIdOption)
+        .build()
 
-            val request: GetCredentialRequest = GetCredentialRequest.Builder()
-                .addCredentialOption(googleIdOption)
-                .build()
+    val e = signIn(request, applicationContext)
+    if (e is NoCredentialException) {
+        val googleIdOptionFalse: GetGoogleIdOption = GetGoogleIdOption.Builder()
+            .setFilterByAuthorizedAccounts(false)
+            .setServerClientId(webClientID)
+            .setNonce(nonce)
+            .build()
 
-            val e = signIn(request, applicationContext)
-            if (e is NoCredentialException) {
-                val googleIdOptionFalse: GetGoogleIdOption = GetGoogleIdOption.Builder()
-                    .setFilterByAuthorizedAccounts(false)
-                    .setServerClientId(webClientID)
-                    .setNonce(nonce)
-                    .build()
+        val requestFalse: GetCredentialRequest = GetCredentialRequest.Builder()
+            .addCredentialOption(googleIdOptionFalse)
+            .build()
 
-                val requestFalse: GetCredentialRequest = GetCredentialRequest.Builder()
-                    .addCredentialOption(googleIdOptionFalse)
-                    .build()
-
-                signIn(requestFalse, applicationContext)
-            }
-        }
+        signIn(requestFalse, applicationContext)
     }
+}
 
-    private fun checkAndRequestPermission(actionIfGranted: () -> Unit) {
-        if (ContextCompat.checkSelfPermission(
-                this,
-                Manifest.permission.ACCESS_FINE_LOCATION
-            ) == PackageManager.PERMISSION_GRANTED
-        ) {
-            actionIfGranted()
+ */
+}
+
+private fun checkAndRequestPermission(actionIfGranted: () -> Unit) {
+if (ContextCompat.checkSelfPermission(
+        this,
+        Manifest.permission.ACCESS_FINE_LOCATION
+    ) == PackageManager.PERMISSION_GRANTED
+) {
+    actionIfGranted()
+} else {
+    requestPermissionLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION)
+}
+}
+
+private fun checkAndRequestNotificationPermission() {
+if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
+    val hasPermission = ContextCompat.checkSelfPermission(
+        this,
+        Manifest.permission.POST_NOTIFICATIONS
+    ) == PackageManager.PERMISSION_GRANTED
+
+    if (!hasPermission) {
+        requestNotificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+    }
+}
+}
+
+private fun startLocationUpdates() {
+locationViewModel.startLocationUpdates()
+}
+
+@RequiresApi(Build.VERSION_CODES.UPSIDE_DOWN_CAKE)
+suspend fun signIn(request: GetCredentialRequest, context: Context): Exception? {
+val credentialManager = CredentialManager.create(context)
+val failureMessage = "Sign in failed!"
+var e: Exception? = null
+delay(250)
+try {
+    val result = credentialManager.getCredential(
+        request = request,
+        context = context,
+    )
+
+    println("(☞ﾟヮﾟ)☞  Sign in Successful!  ☜(ﾟヮﾟ☜)")
+
+    val googleIdTokenCredential = GoogleIdTokenCredential.createFrom(result.credential.data)
+    firebaseAuthWithGoogle(googleIdTokenCredential.idToken)
+
+} catch (e: GetCredentialException) {
+    println("$failureMessage: Failure getting credentials")
+
+} catch (e: GoogleIdTokenParsingException) {
+    println("$failureMessage: Issue with parsing received GoogleIdToken")
+
+} catch (e: NoCredentialException) {
+    println("$failureMessage: No credentials found")
+    return e
+
+} catch (e: GetCredentialCustomException) {
+    println("$failureMessage: Issue with custom credential request")
+
+} catch (e: GetCredentialCancellationException) {
+    println("$failureMessage: Sign-in was cancelled")
+}
+return e
+}
+
+private fun firebaseAuthWithGoogle(idToken: String) {
+val credential = GoogleAuthProvider.getCredential(idToken, null)
+auth.signInWithCredential(credential)
+    .addOnCompleteListener(this) { task ->
+        if (task.isSuccessful) {
+            // Sign in success, update UI with the signed-in user's information
+            Log.d(TAG, "signInWithCredential:success")
+
+            //create user profile in firestore
+            val firebaseUser = auth.currentUser
+            lifecycleScope.launch {
+            val fetchedUser = UserRepository().getById(firebaseUser!!.uid).first()
+            if (fetchedUser?.id != firebaseUser.uid) {
+                val userProfile = UserEntity(
+                    id = firebaseUser.uid,
+                    username = firebaseUser.displayName ?: "",
+                    email = firebaseUser.email ?: "",
+                    authProvider = "google",
+                    googleId = firebaseUser.uid,
+                    storagePreference = "default",
+                    defaultSoundId = "default"
+                )
+                 UserRepository().save(firebaseUser.uid, userProfile) }
+                Log.d(TAG, "signUpWithCredential:success")
+            }
         } else {
-            requestPermissionLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION)
+            // If sign in fails, display a message to the user
+            Log.w(TAG, "signInWithCredential:failure", task.exception)
         }
     }
-
-    private fun checkAndRequestNotificationPermission() {
-        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
-            val hasPermission = ContextCompat.checkSelfPermission(
-                this,
-                Manifest.permission.POST_NOTIFICATIONS
-            ) == PackageManager.PERMISSION_GRANTED
-
-            if (!hasPermission) {
-                requestNotificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
-            }
-        }
-    }
-
-    private fun startLocationUpdates() {
-        locationViewModel.startLocationUpdates()
-    }
-
-    @RequiresApi(Build.VERSION_CODES.UPSIDE_DOWN_CAKE)
-    suspend fun signIn(request: GetCredentialRequest, context: Context): Exception? {
-        val credentialManager = CredentialManager.create(context)
-        val failureMessage = "Sign in failed!"
-        var e: Exception? = null
-        delay(250)
-        try {
-            val result = credentialManager.getCredential(
-                request = request,
-                context = context,
-            )
-
-            println("(☞ﾟヮﾟ)☞  Sign in Successful!  ☜(ﾟヮﾟ☜)")
-
-            val googleIdTokenCredential = GoogleIdTokenCredential.createFrom(result.credential.data)
-            firebaseAuthWithGoogle(googleIdTokenCredential.idToken)
-
-        } catch (e: GetCredentialException) {
-            println("$failureMessage: Failure getting credentials")
-
-        } catch (e: GoogleIdTokenParsingException) {
-            println("$failureMessage: Issue with parsing received GoogleIdToken")
-
-        } catch (e: NoCredentialException) {
-            println("$failureMessage: No credentials found")
-            return e
-
-        } catch (e: GetCredentialCustomException) {
-            println("$failureMessage: Issue with custom credential request")
-
-        } catch (e: GetCredentialCancellationException) {
-            println("$failureMessage: Sign-in was cancelled")
-        }
-        return e
-    }
-
-    private fun firebaseAuthWithGoogle(idToken: String) {
-        val credential = GoogleAuthProvider.getCredential(idToken, null)
-        auth.signInWithCredential(credential)
-            .addOnCompleteListener(this) { task ->
-                if (task.isSuccessful) {
-                    // Sign in success, update UI with the signed-in user's information
-                    Log.d(TAG, "signInWithCredential:success")
-
-                    //create user profile in firestore
-                    val firebaseUser = auth.currentUser
-                    lifecycleScope.launch {
-                    val fetchedUser = UserRepository().getById(firebaseUser!!.uid).first()
-                    if (fetchedUser?.id != firebaseUser.uid) {
-                        val userProfile = UserEntity(
-                            id = firebaseUser.uid,
-                            username = firebaseUser.displayName ?: "",
-                            email = firebaseUser.email ?: "",
-                            authProvider = "google",
-                            googleId = firebaseUser.uid,
-                            storagePreference = "default",
-                            defaultSoundId = "default"
-                        )
-                         UserRepository().save(firebaseUser.uid, userProfile) }
-                        Log.d(TAG, "signUpWithCredential:success")
-                    }
-                } else {
-                    // If sign in fails, display a message to the user
-                    Log.w(TAG, "signInWithCredential:failure", task.exception)
-                }
-            }
-    }
+}
 }
