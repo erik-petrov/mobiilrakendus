@@ -88,8 +88,8 @@ class MainActivity : AppCompatActivity() {
     @RequiresApi(Build.VERSION_CODES.UPSIDE_DOWN_CAKE)
     override fun onCreate(savedInstanceState: Bundle?) {
         // testing
-        val auth1 = FirebaseAuth.getInstance()
-        val db1 = FirebaseFirestore.getInstance()
+        // val auth1 = FirebaseAuth.getInstance()
+        // val db1 = FirebaseFirestore.getInstance()
 
 
         super.onCreate(savedInstanceState)

@@ -32,6 +32,7 @@ class CalendarFragment : Fragment() {
     private lateinit var selectedDateLabel: TextView
     private lateinit var reminderList: RecyclerView
     private lateinit var reminderAdapter: ReminderAdapter
+    private val selectedCategories = mutableSetOf<String>()
 
     private lateinit var categoryViewModel: CategoryViewModel
 
@@ -159,45 +160,62 @@ class CalendarFragment : Fragment() {
 
     private fun showFilterDialog() {
         val dialogView = layoutInflater.inflate(R.layout.dialog_filter, null)
+        val container = dialogView.findViewById<LinearLayout>(R.id.filterContainer)
         val checkAll = dialogView.findViewById<CheckBox>(R.id.checkAll)
-        val checkWork = dialogView.findViewById<CheckBox>(R.id.checkWork)
-        val checkPet = dialogView.findViewById<CheckBox>(R.id.checkPet)
-        val checkSchool = dialogView.findViewById<CheckBox>(R.id.checkSchool)
-        val checkHome = dialogView.findViewById<CheckBox>(R.id.checkHome)
+
+        container.removeAllViews()
+
+        val categories = categoryViewModel.categories.value ?: mutableListOf()
+
+        val checkBoxes = mutableListOf<CheckBox>()
+
+        categories.forEach { category ->
+            val checkBox = CheckBox(requireContext()).apply {
+                text = category.name
+                isChecked = selectedCategories.contains(category.name)
+                setTextColor(resources.getColor(R.color.black, null))
+            }
+
+            checkBox.setOnCheckedChangeListener { _, isChecked ->
+                if (isChecked) {
+                    selectedCategories.add(category.name)
+                } else {
+                    selectedCategories.remove(category.name)
+                }
+
+                if (selectedCategories.isNotEmpty()) {
+                    checkAll.isChecked = false
+                }
+
+                updateReminderList()
+            }
+
+            checkBoxes.add(checkBox)
+            container.addView(checkBox)
+        }
+
+        // "All themes" logic
+        checkAll.setOnCheckedChangeListener { _, isChecked ->
+            if (isChecked) {
+                selectedCategories.clear()
+                checkBoxes.forEach { it.isChecked = false }
+                updateReminderList()
+            }
+        }
 
         val dialog = AlertDialog.Builder(requireContext(), R.style.Theme_HONK_Dialog)
             .setView(dialogView)
             .setCancelable(true)
             .create()
+
         dialog.window?.setBackgroundDrawableResource(android.R.color.transparent)
         dialog.show()
 
-        var isUpdating = false
+        dialog.window?.setLayout(
+            (resources.displayMetrics.widthPixels * 0.85).toInt(),
+            ViewGroup.LayoutParams.WRAP_CONTENT
+        )
 
-        checkAll.setOnCheckedChangeListener { _, isChecked ->
-            if (isUpdating) return@setOnCheckedChangeListener
-            isUpdating = true
-            if (isChecked) {
-                listOf(checkWork, checkPet, checkSchool, checkHome).forEach {
-                    it.isChecked = false
-                }
-            }
-            isUpdating = false
-        }
-
-        val themeListener = CompoundButton.OnCheckedChangeListener { _, _ ->
-            if (isUpdating) return@OnCheckedChangeListener
-            isUpdating = true
-            if (checkWork.isChecked || checkPet.isChecked || checkSchool.isChecked || checkHome.isChecked) {
-                checkAll.isChecked = false
-            }
-            isUpdating = false
-        }
-
-        checkWork.setOnCheckedChangeListener(themeListener)
-        checkPet.setOnCheckedChangeListener(themeListener)
-        checkSchool.setOnCheckedChangeListener(themeListener)
-        checkHome.setOnCheckedChangeListener(themeListener)
     }
 
     // -------- Calendar generation --------
@@ -248,7 +266,12 @@ class CalendarFragment : Fragment() {
     private fun updateReminderList() {
         val currentDate = selectedDate ?: return
         val all = LocalReminderRepository.reminders.value ?: emptyList()
-        val filtered = all.filter { it.date == currentDate }
+
+        val filtered = all.filter { reminder ->
+            reminder.date == currentDate &&
+                    (selectedCategories.isEmpty() || selectedCategories.contains(reminder.category))
+        }
+
         reminderAdapter.setReminders(filtered)
     }
 
