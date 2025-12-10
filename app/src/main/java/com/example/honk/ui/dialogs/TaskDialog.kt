@@ -34,8 +34,20 @@ object TaskDialog {
         val time = view.findViewById<EditText>(R.id.noteTime)
         val remindBeforeSpinner = view.findViewById<Spinner>(R.id.spinner_remind_before)
         val categorySpinner = view.findViewById<Spinner>(R.id.noteCategorySpinner)
-        val priority = view.findViewById<EditText>(R.id.notePriority)
         val saveButton = view.findViewById<Button>(R.id.addButton)
+        val prioritySpinner = view.findViewById<Spinner>(R.id.notePrioritySpinner)
+
+        // Priority dropdown setup
+        val priorities = listOf("Select priority","High", "Medium", "Low")
+
+        val priorityAdapter = ArrayAdapter(
+            ctx,
+            android.R.layout.simple_spinner_dropdown_item,
+            priorities
+        )
+
+        prioritySpinner.adapter = priorityAdapter
+
 
         text.filters = arrayOf(InputFilter.LengthFilter(90))
         time.filters = arrayOf(InputFilter.LengthFilter(5))
@@ -87,7 +99,12 @@ object TaskDialog {
             text.setText(existing.text)
             date.setText(existing.date)
             time.setText(existing.time)
-            priority.setText(existing.priority)
+            val priorityIndex = when (val p = existing.priority) {
+                "", null -> 0
+                else -> priorities.indexOf(p).takeIf { it > 0 } ?: 0
+            }
+            prioritySpinner.setSelection(priorityIndex)
+
         }
 
         // If calendar provides a preset date
@@ -113,7 +130,13 @@ object TaskDialog {
             result.text = text.text.toString()
             result.date = date.text.toString()
             result.time = time.text.toString()
-            result.priority = priority.text.toString()
+            val selectedPriority = prioritySpinner.selectedItem.toString()
+
+            result.priority = if (selectedPriority == "Select priority") {
+                ""
+            } else {
+                selectedPriority
+            }
             result.category = category
 
             onSave(result)
