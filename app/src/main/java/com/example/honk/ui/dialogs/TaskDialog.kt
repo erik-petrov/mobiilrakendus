@@ -37,7 +37,7 @@ object TaskDialog {
         val priority = view.findViewById<EditText>(R.id.notePriority)
         val saveButton = view.findViewById<Button>(R.id.addButton)
 
-        text.filters = arrayOf(InputFilter.LengthFilter(100))
+        text.filters = arrayOf(InputFilter.LengthFilter(90))
         time.filters = arrayOf(InputFilter.LengthFilter(5))
         time.inputType = InputType.TYPE_CLASS_DATETIME or InputType.TYPE_DATETIME_VARIATION_TIME
 
