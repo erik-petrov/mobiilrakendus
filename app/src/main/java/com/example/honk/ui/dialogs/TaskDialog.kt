@@ -11,6 +11,9 @@ import com.example.honk.ui.categories.CategoryViewModel
 import java.util.*
 import com.example.honk.notifications.TaskAlarmScheduler
 import java.text.SimpleDateFormat
+import android.text.InputFilter
+import android.text.InputType
+
 
 object TaskDialog {
 
@@ -33,6 +36,10 @@ object TaskDialog {
         val categorySpinner = view.findViewById<Spinner>(R.id.noteCategorySpinner)
         val priority = view.findViewById<EditText>(R.id.notePriority)
         val saveButton = view.findViewById<Button>(R.id.addButton)
+
+        text.filters = arrayOf(InputFilter.LengthFilter(100))
+        time.filters = arrayOf(InputFilter.LengthFilter(5))
+        time.inputType = InputType.TYPE_CLASS_DATETIME or InputType.TYPE_DATETIME_VARIATION_TIME
 
         val vm = ViewModelProvider(fragment.requireActivity())
             .get(CategoryViewModel::class.java)
