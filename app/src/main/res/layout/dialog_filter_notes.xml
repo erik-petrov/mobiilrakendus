@@ -12,7 +12,14 @@
         android:textStyle="bold"
         android:textSize="18sp"
         android:gravity="center"
-        android:paddingBottom="8dp"/>
+        android:paddingBottom="12dp"/>
+
+    <!-- DATE LABEL -->
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Date"
+        android:textStyle="bold"/>
 
     <Spinner
         android:id="@+id/filterDateSpinner"
@@ -20,24 +27,40 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="4dp"/>
 
+    <!-- CATEGORY LABEL -->
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Category"
+        android:textStyle="bold"
+        android:layout_marginTop="8dp"/>
+
     <Spinner
         android:id="@+id/filterCategorySpinner"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:layout_marginTop="4dp"/>
+
+    <!-- PRIORITY LABEL -->
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Priority"
+        android:textStyle="bold"
         android:layout_marginTop="8dp"/>
 
     <Spinner
         android:id="@+id/filterPrioritySpinner"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"/>
+        android:layout_marginTop="4dp"/>
 
     <Button
         android:id="@+id/applyFilterButton"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="Apply Filter"
-        android:layout_marginTop="12dp"
+        android:layout_marginTop="16dp"
         android:backgroundTint="@color/yellow"
         android:textColor="@android:color/white"/>
 </LinearLayout>
