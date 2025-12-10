@@ -13,7 +13,8 @@
         android:textStyle="bold"
         android:textSize="20sp"
         android:gravity="center"
-        android:layout_marginBottom="16dp"/>
+        android:layout_marginBottom="16dp"
+        android:textColor="@color/text_primary"/>
 
     <!-- MASTER TOGGLE -->
     <CheckBox
@@ -22,7 +23,11 @@
         android:layout_height="wrap_content"
         android:text="All themes"
         android:checked="true"
-        android:layout_marginBottom="12dp"/>
+        android:textColor="@color/text_primary"
+        android:paddingTop="0dp"
+        android:paddingBottom="0dp"
+        android:minHeight="0dp"/>
+
 
     <!-- DYNAMIC CATEGORY CHECKBOXES GO HERE -->
     <LinearLayout

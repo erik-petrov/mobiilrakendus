@@ -173,7 +173,12 @@ class CalendarFragment : Fragment() {
             val checkBox = CheckBox(requireContext()).apply {
                 text = category.name
                 isChecked = selectedCategories.contains(category.name)
-                setTextColor(resources.getColor(R.color.black, null))
+                setTextColor(
+                    androidx.core.content.ContextCompat.getColor(
+                        requireContext(),
+                        R.color.text_primary
+                    )
+                )
             }
 
             checkBox.setOnCheckedChangeListener { _, isChecked ->
