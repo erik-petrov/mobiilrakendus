@@ -13,6 +13,8 @@ import com.example.honk.notifications.TaskAlarmScheduler
 import java.text.SimpleDateFormat
 import android.text.InputFilter
 import android.text.InputType
+import com.example.honk.repository.ReminderRepository
+import com.example.honk.repository.ReminderRepositoryTest
 
 
 object TaskDialog {
@@ -56,6 +58,8 @@ object TaskDialog {
         val vm = ViewModelProvider(fragment.requireActivity())
             .get(CategoryViewModel::class.java)
 
+        val repo = ViewModelProvider(fragment.requireActivity())
+            .get(ReminderViewModel::class.java)
         // load categories dynamically and update spinner when loaded
         vm.categories.observe(fragment.viewLifecycleOwner) { list ->
             val categories = listOf("No category") + list.map { it.name }
@@ -140,6 +144,8 @@ object TaskDialog {
             result.category = category
 
             onSave(result)
+
+            repo.add(result)
 
             scheduleReminderIfNeeded(
                 fragment = fragment,

@@ -1,5 +1,6 @@
 package com.example.honk.model
 
+import com.example.honk.data.entities.ReminderEntity
 import java.util.UUID
 
 data class Reminder(

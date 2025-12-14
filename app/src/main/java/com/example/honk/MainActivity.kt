@@ -45,8 +45,12 @@ import com.example.honk.notifications.NotificationHelper
 import com.example.honk.repository.UserRepository
 import kotlinx.coroutines.flow.first
 import android.app.AlarmManager
+import android.content.pm.ApplicationInfo
 import android.provider.Settings
 import com.example.honk.data.entities.UserEntity
+import com.google.firebase.Firebase
+import com.google.firebase.FirebaseApp
+import com.google.firebase.firestore.firestore
 
 import kotlinx.coroutines.launch
 
@@ -88,9 +92,10 @@ class MainActivity : AppCompatActivity() {
     @RequiresApi(Build.VERSION_CODES.UPSIDE_DOWN_CAKE)
     override fun onCreate(savedInstanceState: Bundle?) {
         // testing
-        // val auth1 = FirebaseAuth.getInstance()
-        // val db1 = FirebaseFirestore.getInstance()
+//         val auth1 = FirebaseAuth.getInstance()
+//         val db1 = FirebaseFirestore.getInstance()
 
+        val db = Firebase.firestore
 
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
@@ -132,39 +137,41 @@ class MainActivity : AppCompatActivity() {
         locationViewModel.currentLocation.observe(this, Observer { location ->
             println(location)
         })
-/*
-lifecycleScope.launch {
-    val nonce = "yGf0bNrjI1BxdZ6JQM2gIsePGlUUgHpuRVo7JC7LrMQgwbxlOj"
-    val webClientID = getString(R.string.default_web_client_id)
-    val googleIdOption: GetGoogleIdOption = GetGoogleIdOption.Builder()
-        .setFilterByAuthorizedAccounts(false)
-        .setServerClientId(webClientID)
-        .setAutoSelectEnabled(true)
-        // nonce string to use when generating a Google ID token
-        .setNonce(nonce)
-        .build()
 
-    val request: GetCredentialRequest = GetCredentialRequest.Builder()
-        .addCredentialOption(googleIdOption)
-        .build()
+        val ai: ApplicationInfo = applicationContext.packageManager
+            .getApplicationInfo(applicationContext.packageName, PackageManager.GET_META_DATA)
+        val value = ai.metaData.getString("WEB_CLIENT_ID")
 
-    val e = signIn(request, applicationContext)
-    if (e is NoCredentialException) {
-        val googleIdOptionFalse: GetGoogleIdOption = GetGoogleIdOption.Builder()
-            .setFilterByAuthorizedAccounts(false)
-            .setServerClientId(webClientID)
-            .setNonce(nonce)
-            .build()
+        lifecycleScope.launch {
+            val nonce = "yGf0bNrjI1BxdZ6JQM2gIsePGlUUgHpuRVo7JC7LrMQgwbxlOj"
+            val webClientID = value.toString()
+            val googleIdOption: GetGoogleIdOption = GetGoogleIdOption.Builder()
+                .setFilterByAuthorizedAccounts(false)
+                .setServerClientId(webClientID)
+                .setAutoSelectEnabled(true)
+                // nonce string to use when generating a Google ID token
+                .setNonce(nonce)
+                .build()
 
-        val requestFalse: GetCredentialRequest = GetCredentialRequest.Builder()
-            .addCredentialOption(googleIdOptionFalse)
-            .build()
+            val request: GetCredentialRequest = GetCredentialRequest.Builder()
+                .addCredentialOption(googleIdOption)
+                .build()
 
-        signIn(requestFalse, applicationContext)
-    }
-}
+            val e = signIn(request, applicationContext)
+            if (e is NoCredentialException) {
+                val googleIdOptionFalse: GetGoogleIdOption = GetGoogleIdOption.Builder()
+                    .setFilterByAuthorizedAccounts(false)
+                    .setServerClientId(webClientID)
+                    .setNonce(nonce)
+                    .build()
 
- */
+                val requestFalse: GetCredentialRequest = GetCredentialRequest.Builder()
+                    .addCredentialOption(googleIdOptionFalse)
+                    .build()
+
+                signIn(requestFalse, applicationContext)
+            }
+        }
 }
 
 private fun checkAndRequestPermission(actionIfGranted: () -> Unit) {

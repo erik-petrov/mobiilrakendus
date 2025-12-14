@@ -14,6 +14,7 @@
 
 
     <application
+        android:name=".YourApplication"
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:fullBackupContent="@xml/backup_rules"
@@ -41,6 +42,9 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <meta-data
+            android:name="WEB_CLIENT_ID"
+            android:value="${WEB_CLIENT_ID}" />
         <receiver
             android:name=".notifications.TaskReminderReceiver"
             android:exported="false" />

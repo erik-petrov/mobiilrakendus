@@ -1,9 +1,18 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
-//    alias(libs.plugins.google.gms.google.services)
+    alias(libs.plugins.google.gms.google.services)
     // id("com.google.gms.google-services")
 }
+
+val properties = Properties()
+val localPropertiesFile = rootProject.file("local.properties")
+if (localPropertiesFile.exists()) {
+    properties.load(localPropertiesFile.inputStream())
+}
+
 
 android {
     namespace = "com.example.honk"
@@ -15,7 +24,7 @@ android {
         targetSdk = 36
         versionCode = 1
         versionName = "1.0"
-
+        manifestPlaceholders["WEB_CLIENT_ID"] = properties.getProperty("WEB_CLIENT_ID", "")
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
@@ -55,9 +64,8 @@ dependencies {
     implementation(libs.androidx.monitor)
     implementation(libs.google.googleid)
     implementation(libs.androidx.runtime)
-    implementation(libs.firebase.firestore.ktx)
-    implementation(libs.firebase.firestore)
-    implementation(libs.firebase.auth.ktx)
+    implementation(libs.google)
+    implementation(libs.secrets.gradle.plugin)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
@@ -90,6 +98,10 @@ dependencies {
     implementation(libs.play.services.location)
     implementation(libs.play.services.auth)
 
+    implementation(platform(libs.firebase.bom))
+    implementation(libs.firebase.auth)
+    implementation(libs.google.firebase.firestore)
+    implementation(libs.firebase.analytics)
     // For requesting runtime permissions (Activity component)
     implementation("androidx.activity:activity-ktx:1.8.2")
 }

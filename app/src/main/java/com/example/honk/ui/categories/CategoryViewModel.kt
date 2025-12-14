@@ -3,6 +3,7 @@ package com.example.honk.ui.categories
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import com.example.honk.model.Reminder
+import com.example.honk.repository.ReminderRepositoryTest
 
 data class Category(
     var name: String,

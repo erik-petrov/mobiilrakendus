@@ -23,7 +23,13 @@ import android.widget.EditText
 import android.widget.ImageButton
 import android.widget.Spinner
 import android.widget.TextView
+import androidx.activity.result.launch
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.lifecycleScope
+import com.example.honk.ui.dialogs.ReminderViewModel
 import com.example.honk.ui.dialogs.TaskDialog
+import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.launch
 
 class CalendarFragment : Fragment() {
 
@@ -35,7 +41,7 @@ class CalendarFragment : Fragment() {
     private val selectedCategories = mutableSetOf<String>()
 
     private lateinit var categoryViewModel: CategoryViewModel
-
+    private lateinit var rwm: ReminderViewModel
     private var selectedDate: String? = null
     private var currentCalendar: Calendar = Calendar.getInstance()
 
@@ -51,7 +57,7 @@ class CalendarFragment : Fragment() {
         // Shared categories between screens
         categoryViewModel =
             ViewModelProvider(requireActivity())[CategoryViewModel::class.java]
-
+        rwm = ViewModelProvider(requireActivity())[ReminderViewModel::class.java]
         // Views
         calendarGrid = view.findViewById(R.id.calendarGrid)
         monthLabel = view.findViewById(R.id.monthLabel)
@@ -270,14 +276,16 @@ class CalendarFragment : Fragment() {
 
     private fun updateReminderList() {
         val currentDate = selectedDate ?: return
-        val all = LocalReminderRepository.reminders.value ?: emptyList()
+        viewLifecycleOwner.lifecycleScope.launch {
+            rwm.getAll().collect { allReminders ->
+                val filtered = allReminders.filter { reminder ->
+                    reminder.date == currentDate &&
+                            (selectedCategories.isEmpty() || selectedCategories.contains(reminder.category))
+                }
 
-        val filtered = all.filter { reminder ->
-            reminder.date == currentDate &&
-                    (selectedCategories.isEmpty() || selectedCategories.contains(reminder.category))
+                reminderAdapter.setReminders(filtered)
+            }
         }
-
-        reminderAdapter.setReminders(filtered)
     }
 
     // -------- Days grid adapter --------

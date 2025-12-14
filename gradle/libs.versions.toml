@@ -1,7 +1,7 @@
 [versions]
 agp = "8.13.1"
 credentialsPlayServicesAuth = "1.6.0-beta03"
-firebaseBom = "34.6.0"
+firebaseBom = "34.7.0"
 googleid = "<latest version>"
 kotlin = "2.0.21"
 coreKtx = "1.10.1"
@@ -18,19 +18,21 @@ navigationUiKtx = "2.6.0"
 monitor = "1.8.0"
 playServicesAuth = "21.4.0"
 playServicesLocation = "21.3.0"
-firebaseFirestoreKtx = "26.0.2"
 googleGmsGoogleServices = "4.4.4"
-firebaseFirestore = "26.0.2"
-firebaseAuthKtx = "24.0.1"
 runtime = "1.9.4"
 googleidVersion = "1.1.1"
 playServices = "12.0.1"
+google = "5"
+secretsGradlePlugin = "2.0.1"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
 androidx-credentials = { module = "androidx.credentials:credentials", version.ref = "credentialsPlayServicesAuth" }
 androidx-credentials-play-services-auth = { module = "androidx.credentials:credentials-play-services-auth", version.ref = "credentialsPlayServicesAuth" }
+firebase-analytics = { module = "com.google.firebase:firebase-analytics" }
+firebase-auth = { module = "com.google.firebase:firebase-auth" }
 firebase-bom = { module = "com.google.firebase:firebase-bom", version.ref = "firebaseBom" }
+google-firebase-firestore = { module = "com.google.firebase:firebase-firestore" }
 googleid = { module = "com.google.android.libraries.identity.googleid:googleid", version.ref = "googleid" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
 androidx-junit = { group = "androidx.test.ext", name = "junit", version.ref = "junitVersion" }
@@ -45,12 +47,14 @@ androidx-navigation-ui-ktx = { group = "androidx.navigation", name = "navigation
 androidx-monitor = { group = "androidx.test", name = "monitor", version.ref = "monitor" }
 play-services-auth = { module = "com.google.android.gms:play-services-auth", version.ref = "playServicesAuth" }
 play-services-location = { module = "com.google.android.gms:play-services-location", version.ref = "playServicesLocation" }
-firebase-firestore-ktx = { group = "com.google.firebase", name = "firebase-firestore-ktx", version = "25.1.4" }
-firebase-firestore = { group = "com.google.firebase", name = "firebase-firestore", version = "26.0.2" }
-firebase-auth-ktx = { group = "com.google.firebase", name = "firebase-auth-ktx", version = "23.2.1" }
+firebase-firestore-ktx = { group = "com.google.firebase", name = "firebase-firestore-ktx"}
+firebase-firestore = { group = "com.google.firebase", name = "firebase-firestore"}
+firebase-auth-ktx = { group = "com.google.firebase", name = "firebase-auth-ktx"}
 androidx-runtime = { group = "androidx.compose.runtime", name = "runtime", version.ref = "runtime" }
 google-googleid = { group = "com.google.android.libraries.identity.googleid", name = "googleid", version.ref = "googleidVersion" }
-play-services = { group = "com.google.android.gms", name = "play-services", version = "12.0.1" }
+firebase-common-ktx = { group = "com.google.firebase", name = "firebase-common-ktx"}
+google = { group = "com.google", name = "google", version.ref = "google" }
+secrets-gradle-plugin = { group = "com.google.android.libraries.mapsplatform.secrets-gradle-plugin", name = "secrets-gradle-plugin", version.ref = "secretsGradlePlugin" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
