@@ -35,8 +35,9 @@
             <!-- Goose -->
             <ImageView
                 android:id="@+id/gooseImage"
-                android:layout_width="200dp"
-                android:layout_height="200dp"
+                android:layout_width="180dp"
+                android:layout_height="180dp"
+                android:layout_marginStart="12dp"
                 android:adjustViewBounds="true"
                 android:contentDescription="Goose"
                 android:src="@drawable/goose_happy" />
