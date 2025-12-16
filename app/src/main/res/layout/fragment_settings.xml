@@ -59,4 +59,19 @@
 
     </LinearLayout>
 
+    <androidx.appcompat.widget.SwitchCompat
+        android:id="@+id/dailySummarySwitch"
+        android:layout_width="match_parent"
+        android:textSize="18sp"
+        android:layout_height="wrap_content"
+        android:text="Daily summary notification" />
+
+    <TextView
+        android:id="@+id/dailySummaryTime"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingTop="8dp"
+        android:text="09:00"
+        android:textSize="16sp" />
+
 </LinearLayout>

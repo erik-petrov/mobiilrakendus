@@ -13,6 +13,7 @@ import android.text.InputFilter
 import android.text.InputType
 import com.example.honk.notifications.ReminderNotificationScheduler
 import com.example.honk.model.ReminderOffset
+import android.app.TimePickerDialog
 
 
 object TaskDialog {
@@ -32,7 +33,35 @@ object TaskDialog {
         val text = view.findViewById<EditText>(R.id.noteText)
         val date = view.findViewById<EditText>(R.id.noteDate)
         val time = view.findViewById<EditText>(R.id.noteTime)
-        val remindBeforeSpinner = view.findViewById<Spinner>(R.id.spinner_remind_before)
+
+        time.isFocusable = false
+        time.isClickable = true
+
+        time.setOnClickListener {
+            val now = Calendar.getInstance()
+
+            val currentText = time.text.toString().trim()
+            val (initH, initM) = parseTimeOrDefault(currentText, now.get(Calendar.HOUR_OF_DAY), now.get(Calendar.MINUTE))
+
+            TimePickerDialog(ctx, { _, hourOfDay, minute ->
+                time.setText(String.format(Locale.getDefault(), "%02d:%02d", hourOfDay, minute))
+            }, initH, initM, true).show()
+        }
+
+        val remindBeforePicker = view.findViewById<TextView>(R.id.spinner_remind_before)
+
+        val offsetOptions = listOf(
+            ReminderOffset.ONE_HOUR,
+            ReminderOffset.TWO_HOURS,
+            ReminderOffset.ONE_DAY,
+            ReminderOffset.TWO_DAYS,
+            ReminderOffset.ONE_WEEK
+        )
+
+        val offsetLabels = arrayOf("1 hour", "2 hours", "1 day", "2 days", "1 week")
+
+        val selectedOffsets = mutableSetOf<ReminderOffset>()
+
         val categorySpinner = view.findViewById<Spinner>(R.id.noteCategorySpinner)
         val saveButton = view.findViewById<Button>(R.id.addButton)
         val prioritySpinner = view.findViewById<Spinner>(R.id.notePrioritySpinner)
@@ -50,8 +79,9 @@ object TaskDialog {
 
 
         text.filters = arrayOf(InputFilter.LengthFilter(90))
-        time.filters = arrayOf(InputFilter.LengthFilter(5))
-        time.inputType = InputType.TYPE_CLASS_DATETIME or InputType.TYPE_DATETIME_VARIATION_TIME
+//        time.filters = arrayOf(InputFilter.LengthFilter(5))
+//        time.inputType = InputType.TYPE_CLASS_DATETIME or InputType.TYPE_DATETIME_VARIATION_TIME
+        time.inputType = InputType.TYPE_NULL
 
         val vm = ViewModelProvider(fragment.requireActivity())
             .get(CategoryViewModel::class.java)
@@ -93,6 +123,24 @@ object TaskDialog {
             ).show()
         }
 
+        remindBeforePicker.setOnClickListener {
+            val checked = BooleanArray(offsetOptions.size) { i ->
+                selectedOffsets.contains(offsetOptions[i])
+            }
+
+            AlertDialog.Builder(ctx, R.style.Theme_HONK_Dialog)
+                .setTitle("Remind before")
+                .setMultiChoiceItems(offsetLabels, checked) { _, which, isChecked ->
+                    val off = offsetOptions[which]
+                    if (isChecked) selectedOffsets.add(off) else selectedOffsets.remove(off)
+                }
+                .setPositiveButton("OK") { _, _ ->
+                    remindBeforePicker.text = formatOffsets(selectedOffsets)
+                }
+                .setNegativeButton("Cancel", null)
+                .show()
+        }
+
         // If editing an existing task
         if (existing != null) {
             title.text = "Edit Task"
@@ -107,15 +155,17 @@ object TaskDialog {
             }
             prioritySpinner.setSelection(priorityIndex)
 
-            val pos = when (existing.reminderOffset) {
-                ReminderOffset.NONE -> 0
-                ReminderOffset.ONE_HOUR -> 1
-                ReminderOffset.TWO_HOURS -> 2
-                ReminderOffset.ONE_DAY -> 3
-                ReminderOffset.TWO_DAYS -> 4
-                ReminderOffset.ONE_WEEK -> 5
+            if (existing?.reminderOffsets?.isNotEmpty() == true) {
+                existing.reminderOffsets.forEach { name ->
+                    runCatching { ReminderOffset.valueOf(name) }.getOrNull()?.let { off ->
+                        if (off.minutes > 0) selectedOffsets.add(off)
+                    }
+                }
+            } else if (existing != null && existing.reminderOffset.minutes > 0) {
+                selectedOffsets.add(existing.reminderOffset)
             }
-            remindBeforeSpinner.setSelection(pos)
+
+            remindBeforePicker.text = formatOffsets(selectedOffsets)
         }
 
         // If calendar provides a preset date
@@ -150,14 +200,11 @@ object TaskDialog {
             }
             result.category = category
 
-            result.reminderOffset = when (remindBeforeSpinner.selectedItemPosition) {
-                1 -> ReminderOffset.ONE_HOUR
-                2 -> ReminderOffset.TWO_HOURS
-                3 -> ReminderOffset.ONE_DAY
-                4 -> ReminderOffset.TWO_DAYS
-                5 -> ReminderOffset.ONE_WEEK
-                else -> ReminderOffset.NONE
-            }
+            result.reminderOffsets = selectedOffsets
+                .sortedBy { it.minutes }
+                .map { it.name }
+
+            result.reminderOffset = selectedOffsets.minByOrNull { it.minutes } ?: ReminderOffset.NONE
 
             if (existing == null) {
                 result.notificationId = System.currentTimeMillis()
@@ -167,7 +214,7 @@ object TaskDialog {
 
             repo.add(result)
 
-            ReminderNotificationScheduler.schedule(fragment.requireContext(), result)
+            ReminderNotificationScheduler.schedule(fragment.requireContext().applicationContext, result)
 
             dialog.dismiss()
         }
@@ -182,72 +229,30 @@ object TaskDialog {
         dialog.window?.setBackgroundDrawableResource(android.R.color.transparent)
     }
 
-//    private fun scheduleReminderIfNeeded(
-//        fragment: Fragment,
-//        reminder: Reminder,
-//        spinnerPosition: Int
-//    ) {
-//        val ctx = fragment.requireContext()
-//
-//        val dateStr = reminder.date
-//        val timeStr = reminder.time
-//
-//        if (dateStr.isBlank() || timeStr.isBlank()) {
-//            return
-//        }
-//
-//        val taskTimeMillis = parseDateTimeToMillis(dateStr, timeStr) ?: return
-//
-//        val offsetMillis = getOffsetMillis(spinnerPosition)
-//        if (offsetMillis <= 0L) return  // "No reminder"
-//
-//        val triggerAt = taskTimeMillis - offsetMillis
-//        if (triggerAt <= System.currentTimeMillis()) {
-//            return
-//        }
-//
-//        // A temporary way to make the reminder ID before the normal database
-//        val taskId = "${reminder.date}_${reminder.time}_${reminder.text}"
-//
-//        val message = buildString {
-//            append("Task: ${reminder.text}")
-//            if (reminder.time.isNotBlank()) {
-//                append(" at ${reminder.time}")
-//            }
-//            if (reminder.date.isNotBlank()) {
-//                append(" on ${reminder.date}")
-//            }
-//        }
-//
-//        TaskAlarmScheduler.scheduleTaskReminder(
-//            context = ctx,
-//            taskId = taskId,
-//            title = "Upcoming task",
-//            message = message,
-//            triggerAtMillis = triggerAt
-//        )
-//    }
+    private fun parseTimeOrDefault(text: String, defH: Int, defM: Int): Pair<Int, Int> {
+        return try {
+            val parts = text.split(":")
+            if (parts.size != 2) return defH to defM
+            val h = parts[0].toInt()
+            val m = parts[1].toInt()
+            if (h !in 0..23 || m !in 0..59) defH to defM else h to m
+        } catch (_: Exception) {
+            defH to defM
+        }
+    }
 
-//    private fun parseDateTimeToMillis(dateStr: String, timeStr: String): Long? {
-//        return try {
-//            val format = SimpleDateFormat("dd.MM.yyyy HH:mm", Locale.getDefault())
-//            val date = format.parse("$dateStr $timeStr")
-//            date?.time
-//        } catch (e: Exception) {
-//            e.printStackTrace()
-//            null
-//        }
-//    }
+    private fun formatOffsets(set: Set<ReminderOffset>): String {
+        if (set.isEmpty()) return "No reminder"
+        return set.sortedBy { it.minutes }.joinToString(", ") { off ->
+            when (off) {
+                ReminderOffset.ONE_HOUR -> "1 hour"
+                ReminderOffset.TWO_HOURS -> "2 hours"
+                ReminderOffset.ONE_DAY -> "1 day"
+                ReminderOffset.TWO_DAYS -> "2 days"
+                ReminderOffset.ONE_WEEK -> "1 week"
+                else -> ""
+            }
+        }
+    }
 
-//    private fun getOffsetMillis(position: Int): Long {
-//        return when (position) {
-//            0 -> 0L                                  // No reminder
-//            1 -> 1L * 60 * 60 * 1000                 // 1 hour
-//            2 -> 2L * 60 * 60 * 1000                 // 2 hours
-//            3 -> 1L * 24 * 60 * 60 * 1000            // 1 day
-//            4 -> 2L * 24 * 60 * 60 * 1000            // 2 days
-//            5 -> 7L * 24 * 60 * 60 * 1000            // 1 week
-//            else -> 0L
-//        }
-//    }
 }

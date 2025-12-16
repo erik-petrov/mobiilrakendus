@@ -6,9 +6,11 @@ import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
 import androidx.work.workDataOf
 import com.example.honk.model.Reminder
+import com.example.honk.model.ReminderOffset
 import java.text.SimpleDateFormat
 import java.util.Locale
 import java.util.concurrent.TimeUnit
+import kotlin.math.abs
 import org.json.JSONArray
 
 object ReminderNotificationScheduler {
@@ -16,55 +18,80 @@ object ReminderNotificationScheduler {
     // ---- PUBLIC API ----
 
     fun schedule(context: Context, reminder: Reminder) {
-        val shouldSchedule = shouldSchedule(reminder)
-        if (!shouldSchedule) {
-            cancel(context, reminder.id)
-            return
-        }
+        val appCtx = context.applicationContext
 
+        // date+time must exist
         val taskTimeMillis = parseDateTimeToMillis(reminder.date, reminder.time) ?: run {
-            cancel(context, reminder.id); return
-        }
-
-        val offsetMillis = reminder.reminderOffset.minutes * 60_000L
-        val triggerAt = taskTimeMillis - offsetMillis
-        val delay = triggerAt - System.currentTimeMillis()
-
-        if (delay <= 0) { // late
-            cancel(context, reminder.id)
+            cancel(appCtx, reminder.id)
             return
         }
 
-        val message = buildString {
-            append("Task: ${reminder.text}")
-            if (reminder.time.isNotBlank()) append(" at ${reminder.time}")
-            if (reminder.date.isNotBlank()) append(" on ${reminder.date}")
+        // Collect offsets (new multi list OR fallback to old single field)
+        val offsets = collectOffsets(reminder)
+
+        // If no offsets -> cancel all for this reminder
+        if (reminder.isDone || offsets.isEmpty()) {
+            cancel(appCtx, reminder.id)
+            return
         }
 
-        val data = workDataOf(
-            ReminderNotificationWorker.KEY_TITLE to "Upcoming task",
-            ReminderNotificationWorker.KEY_MESSAGE to message,
-            ReminderNotificationWorker.KEY_OPEN_DATE to reminder.date,
-            ReminderNotificationWorker.KEY_NOTIFICATION_ID to reminder.notificationId.toInt()
-        )
+        // Cancel ALL old works for this reminder first (important for editing)
+        WorkManager.getInstance(appCtx).cancelAllWorkByTag(tag(reminder.id))
 
-        val request = OneTimeWorkRequestBuilder<ReminderNotificationWorker>()
-            .setInitialDelay(delay, TimeUnit.MILLISECONDS)
-            .setInputData(data)
-            .build()
+        var scheduledAny = false
 
-        WorkManager.getInstance(context).enqueueUniqueWork(
-            uniqueName(reminder.id),
-            ExistingWorkPolicy.REPLACE, // for editing
-            request
-        )
+        for (off in offsets) {
+            val triggerAt = taskTimeMillis - off.minutes * 60_000L
+            val delay = triggerAt - System.currentTimeMillis()
+            if (delay <= 0) continue
 
-        markScheduledIds(context, getScheduledIds(context) + reminder.id)
+            val message = buildString {
+                append("Task: ${reminder.text}")
+                append(" (${formatOffsetShort(off)})")
+                if (reminder.time.isNotBlank()) append(" at ${reminder.time}")
+                if (reminder.date.isNotBlank()) append(" on ${reminder.date}")
+            }
+
+            val notifId = notificationId(reminder.id, off.minutes)
+
+            val data = workDataOf(
+                ReminderNotificationWorker.KEY_TITLE to "Upcoming task",
+                ReminderNotificationWorker.KEY_MESSAGE to message,
+                ReminderNotificationWorker.KEY_OPEN_DATE to reminder.date,
+                ReminderNotificationWorker.KEY_NOTIFICATION_ID to notifId
+            )
+
+            val request = OneTimeWorkRequestBuilder<ReminderNotificationWorker>()
+                .setInitialDelay(delay, TimeUnit.MILLISECONDS)
+                .setInputData(data)
+                .addTag(tag(reminder.id)) // so we can cancel all offsets together
+                .build()
+
+            WorkManager.getInstance(appCtx).enqueueUniqueWork(
+                uniqueName(reminder.id, off.minutes),
+                ExistingWorkPolicy.REPLACE,
+                request
+            )
+
+            scheduledAny = true
+        }
+
+        if (scheduledAny) {
+            markScheduledIds(appCtx, getScheduledIds(appCtx) + reminder.id)
+        } else {
+            // all triggers were in the past -> cancel
+            cancel(appCtx, reminder.id)
+        }
     }
 
     fun cancel(context: Context, reminderId: String) {
-        WorkManager.getInstance(context).cancelUniqueWork(uniqueName(reminderId))
-        markScheduledIds(context, getScheduledIds(context) - reminderId)
+        val appCtx = context.applicationContext
+
+        // cancel all works related to this reminder (for all offsets)
+        WorkManager.getInstance(appCtx).cancelAllWorkByTag(tag(reminderId))
+
+        // remove from persisted set
+        markScheduledIds(appCtx, getScheduledIds(appCtx) - reminderId)
     }
 
     /**
@@ -73,36 +100,52 @@ object ReminderNotificationScheduler {
      * - cancels extra (deleted/offset/invalid)
      */
     fun syncFromFirestore(context: Context, reminders: List<Reminder>) {
+        val appCtx = context.applicationContext
+
         val activeIds = mutableSetOf<String>()
 
         for (r in reminders) {
-            if (shouldSchedule(r) && parseDateTimeToMillis(r.date, r.time) != null) {
-                // schedule do himself REPLACE
-                schedule(context, r)
+            val hasValidTime = parseDateTimeToMillis(r.date, r.time) != null
+            val hasOffsets = collectOffsets(r).isNotEmpty()
+
+            if (!r.isDone && hasValidTime && hasOffsets) {
+                schedule(appCtx, r)     // schedule uses REPLACE and cancels old
                 activeIds.add(r.id)
             } else {
-                cancel(context, r.id)
+                cancel(appCtx, r.id)
             }
         }
 
         // if something was planned earlier, but disappeared from the Firestore list
-        val previously = getScheduledIds(context)
+        val previously = getScheduledIds(appCtx)
         val removed = previously - reminders.map { it.id }.toSet()
-        for (id in removed) cancel(context, id)
+        for (id in removed) cancel(appCtx, id)
 
-        markScheduledIds(context, activeIds)
+        markScheduledIds(appCtx, activeIds)
     }
 
     // ---- INTERNALS ----
 
-    private fun shouldSchedule(r: Reminder): Boolean {
-        return !r.isDone &&
-                r.reminderOffset.minutes > 0 &&
-                r.date.isNotBlank() &&
-                r.time.isNotBlank()
+    private fun collectOffsets(reminder: Reminder): List<ReminderOffset> {
+        val fromList = if (reminder.reminderOffsets.isNotEmpty()) {
+            reminder.reminderOffsets.mapNotNull { name ->
+                runCatching { ReminderOffset.valueOf(name) }.getOrNull()
+            }
+        } else {
+            listOf(reminder.reminderOffset)
+        }
+
+        return fromList
+            .filter { it.minutes > 0 }
+            .distinctBy { it.minutes }
+            .sortedBy { it.minutes }
     }
 
-    private fun uniqueName(reminderId: String) = "reminder_$reminderId"
+    private fun uniqueName(reminderId: String, offsetMin: Int) =
+        "reminder_${reminderId}_$offsetMin"
+
+    private fun tag(reminderId: String) =
+        "reminder_tag_$reminderId"
 
     private fun parseDateTimeToMillis(dateStr: String, timeStr: String): Long? {
         return try {
@@ -112,6 +155,24 @@ object ReminderNotificationScheduler {
             null
         }
     }
+
+    /**
+     * Deterministic notification id so "1 day" and "1 hour" do not overwrite each other.
+     */
+    private fun notificationId(reminderId: String, offsetMin: Int): Int {
+        val raw = reminderId.hashCode() * 31 + offsetMin
+        return abs(raw.coerceAtLeast(1))
+    }
+
+    private fun formatOffsetShort(off: ReminderOffset): String =
+        when (off) {
+            ReminderOffset.ONE_HOUR -> "in 1h"
+            ReminderOffset.TWO_HOURS -> "in 2h"
+            ReminderOffset.ONE_DAY -> "in 1d"
+            ReminderOffset.TWO_DAYS -> "in 2d"
+            ReminderOffset.ONE_WEEK -> "in 1w"
+            else -> ""
+        }
 
     // ---- PERSIST scheduled ids ----
 

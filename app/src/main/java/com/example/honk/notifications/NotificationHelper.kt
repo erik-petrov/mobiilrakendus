@@ -9,6 +9,8 @@ import androidx.core.app.NotificationManagerCompat
 import com.example.honk.R
 import android.Manifest
 import android.content.pm.PackageManager
+import android.media.AudioAttributes
+import android.net.Uri
 import androidx.core.content.ContextCompat
 
 object NotificationHelper {
@@ -20,12 +22,22 @@ object NotificationHelper {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val manager = context.getSystemService(NotificationManager::class.java)
 
+            val soundUri: Uri = Uri.parse(
+                "android.resource://${context.packageName}/${R.raw.honk_sound}"
+            )
+
+            val audioAttrs = AudioAttributes.Builder()
+                .setUsage(AudioAttributes.USAGE_NOTIFICATION)
+                .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
+                .build()
+
             val taskChannel = NotificationChannel(
                 CHANNEL_TASK_REMINDERS,
                 "Task reminders",
                 NotificationManager.IMPORTANCE_DEFAULT
             ).apply {
                 description = "Notifications for upcoming tasks"
+                setSound(soundUri, audioAttrs)
             }
 
             manager.createNotificationChannel(taskChannel)

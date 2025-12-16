@@ -49,6 +49,7 @@ import android.content.Intent
 import android.content.pm.ApplicationInfo
 import android.provider.Settings
 import com.example.honk.data.entities.UserEntity
+import com.example.honk.notifications.DailySummaryScheduler
 import com.google.firebase.Firebase
 import com.google.firebase.FirebaseApp
 import com.google.firebase.firestore.firestore
@@ -150,6 +151,8 @@ class MainActivity : AppCompatActivity() {
 
         // Create notification channels (Android 8+)
         NotificationHelper.createNotificationChannels(this)
+
+        DailySummaryScheduler.scheduleNext(this)
 
         // Ask for notification permission on Android 13+
         checkAndRequestNotificationPermission()

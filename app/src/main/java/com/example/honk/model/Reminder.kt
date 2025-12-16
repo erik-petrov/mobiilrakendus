@@ -15,6 +15,7 @@ data class Reminder(
     // Unique id for this reminder (used for notifications)
     var notificationId: Long = System.currentTimeMillis(),
     var reminderOffset: ReminderOffset = ReminderOffset.NONE,
+    var reminderOffsets: List<String> = emptyList(),
 
     var imageUri: String? = null
 )

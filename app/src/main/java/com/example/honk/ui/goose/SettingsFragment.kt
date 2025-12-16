@@ -1,5 +1,6 @@
 package com.example.honk.ui.goose
 
+import android.app.TimePickerDialog
 import android.content.Context
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatDelegate
@@ -7,11 +8,14 @@ import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.CompoundButton
-import androidx.appcompat.widget.SwitchCompat
-import com.example.honk.R
 import android.widget.ImageButton
+import android.widget.TextView
+import androidx.appcompat.widget.SwitchCompat
 import androidx.navigation.fragment.findNavController
+import com.example.honk.R
+import com.example.honk.notifications.DailySummaryPrefs
+import com.example.honk.notifications.DailySummaryScheduler
+import java.util.Locale
 
 
 class SettingsFragment : Fragment() {
@@ -54,6 +58,38 @@ class SettingsFragment : Fragment() {
 
             // Apply theme
             AppCompatDelegate.setDefaultNightMode(nightMode)
+        }
+
+        // --- Daily summary controls ---
+        val dailySwitch = view.findViewById<SwitchCompat>(R.id.dailySummarySwitch)
+        val dailyTime = view.findViewById<TextView>(R.id.dailySummaryTime)
+
+        fun renderTime() {
+            val h = DailySummaryPrefs.getHour(requireContext())
+            val m = DailySummaryPrefs.getMinute(requireContext())
+            dailyTime.text = String.format(Locale.getDefault(), "%02d:%02d", h, m)
+        }
+
+        dailySwitch.isChecked = DailySummaryPrefs.isEnabled(requireContext())
+        renderTime()
+
+        dailySwitch.setOnCheckedChangeListener { _, enabled ->
+            DailySummaryPrefs.setEnabled(requireContext(), enabled)
+            if (enabled) DailySummaryScheduler.scheduleNext(requireContext())
+            else DailySummaryScheduler.cancel(requireContext())
+        }
+
+        dailyTime.setOnClickListener {
+            val h = DailySummaryPrefs.getHour(requireContext())
+            val m = DailySummaryPrefs.getMinute(requireContext())
+
+            TimePickerDialog(requireContext(), { _, hourOfDay, minute ->
+                DailySummaryPrefs.setTime(requireContext(), hourOfDay, minute)
+                renderTime()
+                if (DailySummaryPrefs.isEnabled(requireContext())) {
+                    DailySummaryScheduler.scheduleNext(requireContext())
+                }
+            }, h, m, true).show()
         }
     }
 }
