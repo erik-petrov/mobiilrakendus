@@ -24,7 +24,7 @@ android {
         targetSdk = 36
         versionCode = 1
         versionName = "1.0"
-        manifestPlaceholders["WEB_CLIENT_ID"] = properties.getProperty("WEB_CLIENT_ID", "")
+//        manifestPlaceholders["WEB_CLIENT_ID"] = properties.getProperty("WEB_CLIENT_ID", "")
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
@@ -104,4 +104,6 @@ dependencies {
     implementation(libs.firebase.analytics)
     // For requesting runtime permissions (Activity component)
     implementation("androidx.activity:activity-ktx:1.8.2")
+    // for notification
+    implementation("androidx.work:work-runtime-ktx:2.9.0")
 }

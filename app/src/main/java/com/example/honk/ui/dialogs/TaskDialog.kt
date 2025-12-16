@@ -9,12 +9,10 @@ import com.example.honk.R
 import com.example.honk.model.Reminder
 import com.example.honk.ui.categories.CategoryViewModel
 import java.util.*
-import com.example.honk.notifications.TaskAlarmScheduler
-import java.text.SimpleDateFormat
 import android.text.InputFilter
 import android.text.InputType
-import com.example.honk.repository.ReminderRepository
-import com.example.honk.repository.ReminderRepositoryTest
+import com.example.honk.notifications.ReminderNotificationScheduler
+import com.example.honk.model.ReminderOffset
 
 
 object TaskDialog {
@@ -109,6 +107,15 @@ object TaskDialog {
             }
             prioritySpinner.setSelection(priorityIndex)
 
+            val pos = when (existing.reminderOffset) {
+                ReminderOffset.NONE -> 0
+                ReminderOffset.ONE_HOUR -> 1
+                ReminderOffset.TWO_HOURS -> 2
+                ReminderOffset.ONE_DAY -> 3
+                ReminderOffset.TWO_DAYS -> 4
+                ReminderOffset.ONE_WEEK -> 5
+            }
+            remindBeforeSpinner.setSelection(pos)
         }
 
         // If calendar provides a preset date
@@ -143,15 +150,24 @@ object TaskDialog {
             }
             result.category = category
 
+            result.reminderOffset = when (remindBeforeSpinner.selectedItemPosition) {
+                1 -> ReminderOffset.ONE_HOUR
+                2 -> ReminderOffset.TWO_HOURS
+                3 -> ReminderOffset.ONE_DAY
+                4 -> ReminderOffset.TWO_DAYS
+                5 -> ReminderOffset.ONE_WEEK
+                else -> ReminderOffset.NONE
+            }
+
+            if (existing == null) {
+                result.notificationId = System.currentTimeMillis()
+            }
+
             onSave(result)
 
             repo.add(result)
 
-            scheduleReminderIfNeeded(
-                fragment = fragment,
-                reminder = result,
-                spinnerPosition = remindBeforeSpinner.selectedItemPosition
-            )
+            ReminderNotificationScheduler.schedule(fragment.requireContext(), result)
 
             dialog.dismiss()
         }
@@ -166,72 +182,72 @@ object TaskDialog {
         dialog.window?.setBackgroundDrawableResource(android.R.color.transparent)
     }
 
-    private fun scheduleReminderIfNeeded(
-        fragment: Fragment,
-        reminder: Reminder,
-        spinnerPosition: Int
-    ) {
-        val ctx = fragment.requireContext()
+//    private fun scheduleReminderIfNeeded(
+//        fragment: Fragment,
+//        reminder: Reminder,
+//        spinnerPosition: Int
+//    ) {
+//        val ctx = fragment.requireContext()
+//
+//        val dateStr = reminder.date
+//        val timeStr = reminder.time
+//
+//        if (dateStr.isBlank() || timeStr.isBlank()) {
+//            return
+//        }
+//
+//        val taskTimeMillis = parseDateTimeToMillis(dateStr, timeStr) ?: return
+//
+//        val offsetMillis = getOffsetMillis(spinnerPosition)
+//        if (offsetMillis <= 0L) return  // "No reminder"
+//
+//        val triggerAt = taskTimeMillis - offsetMillis
+//        if (triggerAt <= System.currentTimeMillis()) {
+//            return
+//        }
+//
+//        // A temporary way to make the reminder ID before the normal database
+//        val taskId = "${reminder.date}_${reminder.time}_${reminder.text}"
+//
+//        val message = buildString {
+//            append("Task: ${reminder.text}")
+//            if (reminder.time.isNotBlank()) {
+//                append(" at ${reminder.time}")
+//            }
+//            if (reminder.date.isNotBlank()) {
+//                append(" on ${reminder.date}")
+//            }
+//        }
+//
+//        TaskAlarmScheduler.scheduleTaskReminder(
+//            context = ctx,
+//            taskId = taskId,
+//            title = "Upcoming task",
+//            message = message,
+//            triggerAtMillis = triggerAt
+//        )
+//    }
 
-        val dateStr = reminder.date
-        val timeStr = reminder.time
+//    private fun parseDateTimeToMillis(dateStr: String, timeStr: String): Long? {
+//        return try {
+//            val format = SimpleDateFormat("dd.MM.yyyy HH:mm", Locale.getDefault())
+//            val date = format.parse("$dateStr $timeStr")
+//            date?.time
+//        } catch (e: Exception) {
+//            e.printStackTrace()
+//            null
+//        }
+//    }
 
-        if (dateStr.isBlank() || timeStr.isBlank()) {
-            return
-        }
-
-        val taskTimeMillis = parseDateTimeToMillis(dateStr, timeStr) ?: return
-
-        val offsetMillis = getOffsetMillis(spinnerPosition)
-        if (offsetMillis <= 0L) return  // "No reminder"
-
-        val triggerAt = taskTimeMillis - offsetMillis
-        if (triggerAt <= System.currentTimeMillis()) {
-            return
-        }
-
-        // A temporary way to make the reminder ID before the normal database
-        val taskId = "${reminder.date}_${reminder.time}_${reminder.text}"
-
-        val message = buildString {
-            append("Task: ${reminder.text}")
-            if (reminder.time.isNotBlank()) {
-                append(" at ${reminder.time}")
-            }
-            if (reminder.date.isNotBlank()) {
-                append(" on ${reminder.date}")
-            }
-        }
-
-        TaskAlarmScheduler.scheduleTaskReminder(
-            context = ctx,
-            taskId = taskId,
-            title = "Upcoming task",
-            message = message,
-            triggerAtMillis = triggerAt
-        )
-    }
-
-    private fun parseDateTimeToMillis(dateStr: String, timeStr: String): Long? {
-        return try {
-            val format = SimpleDateFormat("dd.MM.yyyy HH:mm", Locale.getDefault())
-            val date = format.parse("$dateStr $timeStr")
-            date?.time
-        } catch (e: Exception) {
-            e.printStackTrace()
-            null
-        }
-    }
-
-    private fun getOffsetMillis(position: Int): Long {
-        return when (position) {
-            0 -> 0L                                  // No reminder
-            1 -> 1L * 60 * 60 * 1000                 // 1 hour
-            2 -> 2L * 60 * 60 * 1000                 // 2 hours
-            3 -> 1L * 24 * 60 * 60 * 1000            // 1 day
-            4 -> 2L * 24 * 60 * 60 * 1000            // 2 days
-            5 -> 7L * 24 * 60 * 60 * 1000            // 1 week
-            else -> 0L
-        }
-    }
+//    private fun getOffsetMillis(position: Int): Long {
+//        return when (position) {
+//            0 -> 0L                                  // No reminder
+//            1 -> 1L * 60 * 60 * 1000                 // 1 hour
+//            2 -> 2L * 60 * 60 * 1000                 // 2 hours
+//            3 -> 1L * 24 * 60 * 60 * 1000            // 1 day
+//            4 -> 2L * 24 * 60 * 60 * 1000            // 2 days
+//            5 -> 7L * 24 * 60 * 60 * 1000            // 1 week
+//            else -> 0L
+//        }
+//    }
 }

@@ -19,17 +19,14 @@ import java.text.SimpleDateFormat
 import java.util.*
 import android.widget.AdapterView
 import android.widget.BaseAdapter
-import android.widget.EditText
 import android.widget.ImageButton
-import android.widget.Spinner
 import android.widget.TextView
-import androidx.activity.result.launch
-import androidx.lifecycle.ViewModel
 import androidx.lifecycle.lifecycleScope
+import com.example.honk.MainActivity
 import com.example.honk.ui.dialogs.ReminderViewModel
 import com.example.honk.ui.dialogs.TaskDialog
-import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.launch
+import com.example.honk.notifications.ReminderNotificationScheduler
 
 class CalendarFragment : Fragment() {
 
@@ -44,6 +41,8 @@ class CalendarFragment : Fragment() {
     private lateinit var rwm: ReminderViewModel
     private var selectedDate: String? = null
     private var currentCalendar: Calendar = Calendar.getInstance()
+
+    private var allRemindersCache: List<Reminder> = emptyList()
 
     // -------- Lifecycle --------
 
@@ -88,12 +87,16 @@ class CalendarFragment : Fragment() {
                 TaskDialog.show(
                     fragment = this,
                     existing = reminder,
-                    onSave = { LocalReminderRepository.update(it) },
-                    onDelete = { LocalReminderRepository.delete(reminder) }
+                    onSave = { }, // LocalReminderRepository.update(it)
+                    onDelete = { val ctx = requireContext().applicationContext
+                        ReminderNotificationScheduler.cancel(ctx, reminder.id)
+                        rwm.delete(reminder.id) }
                 )
             },
             onDeleteClick = { reminder ->
-                LocalReminderRepository.delete(reminder)
+                val ctx = requireContext().applicationContext
+                ReminderNotificationScheduler.cancel(ctx, reminder.id)
+                rwm.delete(reminder.id)
             }
         )
         reminderList.layoutManager = LinearLayoutManager(requireContext())
@@ -105,7 +108,7 @@ class CalendarFragment : Fragment() {
         val todayDay = currentCalendar.get(Calendar.DAY_OF_MONTH)
         selectedDateLabel.text = "$todayDay ${monthLabel.text}"
 
-        updateReminderList()
+        startCollectingReminders()
 
         // Day click listener
         calendarGrid.onItemClickListener =
@@ -123,7 +126,7 @@ class CalendarFragment : Fragment() {
                 selectedDate = sdf.format(clickedCal.time)
 
                 selectedDateLabel.text = "${dayInfo.day} ${monthLabel.text}"
-                updateReminderList()
+                renderReminderList()
             }
 
         // FAB – add reminder
@@ -132,19 +135,19 @@ class CalendarFragment : Fragment() {
                 TaskDialog.show(
                     fragment = this,
                     presetDate = selectedDate,
-                    onSave = { LocalReminderRepository.add(it) }
+                    onSave = {  } // LocalReminderRepository.add(it)
                 )
             }
 
 
         // Observe global tasks and refresh list when anything changes
-        LocalReminderRepository.reminders.observe(viewLifecycleOwner) {
-            updateReminderList()
-        }
-
-        LocalReminderRepository.reminders.observe(viewLifecycleOwner) {
-            updateCalendar()
-        }
+//        LocalReminderRepository.reminders.observe(viewLifecycleOwner) {
+//            renderReminderList()
+//        }
+//
+//        LocalReminderRepository.reminders.observe(viewLifecycleOwner) {
+//            updateCalendar()
+//        }
 
 
         return view
@@ -198,7 +201,7 @@ class CalendarFragment : Fragment() {
                     checkAll.isChecked = false
                 }
 
-                updateReminderList()
+                renderReminderList()
             }
 
             checkBoxes.add(checkBox)
@@ -210,7 +213,7 @@ class CalendarFragment : Fragment() {
             if (isChecked) {
                 selectedCategories.clear()
                 checkBoxes.forEach { it.isChecked = false }
-                updateReminderList()
+                renderReminderList()
             }
         }
 
@@ -274,18 +277,47 @@ class CalendarFragment : Fragment() {
 
     // -------- Update visible reminders --------
 
-    private fun updateReminderList() {
-        val currentDate = selectedDate ?: return
+//    private fun updateReminderList() {
+//        val currentDate = selectedDate ?: return
+//        viewLifecycleOwner.lifecycleScope.launch {
+//            rwm.getAll().collect { allReminders ->
+//                val filtered = allReminders.filter { reminder ->
+//                    reminder.date == currentDate &&
+//                            (selectedCategories.isEmpty() || selectedCategories.contains(reminder.category))
+//                }
+//
+//                reminderAdapter.setReminders(filtered)
+//                ReminderNotificationScheduler.syncFromFirestore(requireContext(), allReminders)
+//            }
+//        }
+//    }
+
+    private fun startCollectingReminders() {
         viewLifecycleOwner.lifecycleScope.launch {
             rwm.getAll().collect { allReminders ->
-                val filtered = allReminders.filter { reminder ->
-                    reminder.date == currentDate &&
-                            (selectedCategories.isEmpty() || selectedCategories.contains(reminder.category))
-                }
+                allRemindersCache = allReminders
 
-                reminderAdapter.setReminders(filtered)
+                // синк уведомлений — только здесь (один раз на обновление из Firestore)
+                ReminderNotificationScheduler.syncFromFirestore(
+                    requireContext().applicationContext,
+                    allReminders
+                )
+
+                // перерисовать список под выбранную дату/фильтры
+                renderReminderList()
             }
         }
+    }
+
+    private fun renderReminderList() {
+        val currentDate = selectedDate ?: return
+
+        val filtered = allRemindersCache.filter { reminder ->
+            reminder.date == currentDate &&
+                    (selectedCategories.isEmpty() || selectedCategories.contains(reminder.category))
+        }
+
+        reminderAdapter.setReminders(filtered)
     }
 
     // -------- Days grid adapter --------
@@ -384,6 +416,31 @@ class CalendarFragment : Fragment() {
                 else -> 0xFF888888.toInt()
             }
             holder.text.setTextColor(color)
+        }
+    }
+
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+
+        parentFragmentManager.setFragmentResultListener(
+            MainActivity.FR_RESULT_KEY,
+            viewLifecycleOwner
+        ) { _, bundle ->
+            val date = bundle.getString(MainActivity.FR_BUNDLE_DATE) ?: return@setFragmentResultListener
+
+            val sdf = SimpleDateFormat("dd.MM.yyyy", Locale.getDefault())
+            val cal = Calendar.getInstance()
+            cal.time = sdf.parse(date) ?: return@setFragmentResultListener
+
+            currentCalendar.time = cal.time
+            selectedDate = date
+
+            updateCalendar()
+
+            val day = cal.get(Calendar.DAY_OF_MONTH)
+            selectedDateLabel.text = "$day ${monthLabel.text}"
+
+            renderReminderList()
         }
     }
 }

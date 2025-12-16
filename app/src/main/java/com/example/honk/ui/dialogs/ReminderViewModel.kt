@@ -17,4 +17,10 @@ class ReminderViewModel : ViewModel() {
     }
 
     fun getAll() = repository.getAll()
+
+    fun delete(reminderId: String) {
+        viewModelScope.launch(Dispatchers.IO) {
+            repository.delete(reminderId)
+        }
+    }
 }

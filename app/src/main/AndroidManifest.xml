@@ -42,9 +42,9 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <meta-data
-            android:name="WEB_CLIENT_ID"
-            android:value="${WEB_CLIENT_ID}" />
+<!--        <meta-data-->
+<!--            android:name="WEB_CLIENT_ID"-->
+<!--            android:value="${WEB_CLIENT_ID}" />-->
         <receiver
             android:name=".notifications.TaskReminderReceiver"
             android:exported="false" />
