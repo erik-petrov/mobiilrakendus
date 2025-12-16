@@ -144,7 +144,7 @@ class MainActivity : AppCompatActivity() {
 
         lifecycleScope.launch {
             val nonce = "yGf0bNrjI1BxdZ6JQM2gIsePGlUUgHpuRVo7JC7LrMQgwbxlOj"
-            val webClientID = value.toString()
+            val webClientID = getString(R.string.default_web_client_id)
             val googleIdOption: GetGoogleIdOption = GetGoogleIdOption.Builder()
                 .setFilterByAuthorizedAccounts(false)
                 .setServerClientId(webClientID)
