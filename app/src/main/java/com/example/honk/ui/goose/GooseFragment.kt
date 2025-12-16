@@ -92,30 +92,59 @@ class GooseFragment : Fragment() {
         }
     }
 
+//    private fun honkGoose() {
+//        // animate goose: grow and shrink
+//        gooseImage.animate()
+//            .scaleX(1.1f)
+//            .scaleY(1.1f)
+//            .setDuration(200)
+//            .withEndAction {
+//                gooseImage.animate().scaleX(1f).scaleY(1f).duration = 200
+//            }
+//
+//        // play honk sound (optional)
+//        // mediaPlayer = MediaPlayer.create(requireContext(), R.raw.honk)
+//        // mediaPlayer?.start()
+//
+//        // adjust XP randomly to simulate reactions
+//        gooseXP = (gooseXP + 5).coerceAtMost(100)
+//        updateGooseMood()
+//    }
+
     private fun honkGoose() {
-        // animate goose: grow and shrink
         gooseImage.animate()
             .scaleX(1.1f)
             .scaleY(1.1f)
             .setDuration(200)
             .withEndAction {
-                gooseImage.animate().scaleX(1f).scaleY(1f).duration = 200
+                gooseImage.setImageResource(R.drawable.goose_honk)
+
+                gooseImage.postDelayed({
+                    gooseXP = (gooseXP + 5).coerceAtMost(100)
+
+                    updateGooseMood()
+
+                    gooseImage.animate()
+                        .scaleX(1f)
+                        .scaleY(1f)
+                        .setDuration(200)
+                        .withEndAction {
+                            gooseImage.translationX = 0f
+                            gooseImage.translationY = 0f
+                            gooseImage.alpha = 1f
+                        }
+                        .start()
+                }, 300)
             }
-
-        // play honk sound (optional)
-        // mediaPlayer = MediaPlayer.create(requireContext(), R.raw.honk)
-        // mediaPlayer?.start()
-
-        // adjust XP randomly to simulate reactions
-        gooseXP = (gooseXP + 5).coerceAtMost(100)
-        updateGooseMood()
+            .start()
     }
+
 
     private fun updateGooseMood() {
         xpBar.progress = gooseXP
         xpText.text = "XP: $gooseXP / 100"
 
-        isHappy = gooseXP > 40
+        isHappy = gooseXP >= 40
         if (isHappy) {
             gooseImage.setImageResource(R.drawable.goose_happy)
         } else {
