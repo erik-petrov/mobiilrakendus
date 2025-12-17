@@ -39,7 +39,7 @@ class DailySummaryWorker(
             }
         }
 
-        val uid = FirebaseModule.auth.currentUser?.uid
+        val uid = FirebaseModule.auth.currentUser?.uid ?: "debug_user"
         if (uid == null) {
             DailySummaryScheduler.scheduleNext(appCtx)
             return Result.success()
@@ -66,6 +66,7 @@ class DailySummaryWorker(
 
             DailySummaryScheduler.scheduleNext(appCtx)
             Result.success()
+
         } catch (e: Exception) {
             DailySummaryScheduler.scheduleNext(appCtx)
             Result.retry()
