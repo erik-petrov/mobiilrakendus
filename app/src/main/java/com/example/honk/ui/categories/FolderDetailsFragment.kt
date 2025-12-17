@@ -16,6 +16,7 @@ import com.example.honk.R
 import com.example.honk.local.LocalReminderRepository
 import com.example.honk.model.Reminder
 import com.example.honk.repository.ReminderRepositoryTest
+import com.example.honk.ui.dialogs.ReminderViewModel
 import com.example.honk.ui.dialogs.TaskDialog
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import kotlinx.coroutines.Dispatchers
@@ -24,10 +25,12 @@ import kotlinx.coroutines.launch
 class FolderDetailsFragment : Fragment() {
 
     private lateinit var viewModel: CategoryViewModel
+    private lateinit var rwm: ReminderViewModel
     private lateinit var categoryTitle: TextView
     private lateinit var reminderRecycler: RecyclerView
     private lateinit var reminderAdapter: ReminderAdapter
     private var categoryIndex: Int = -1
+    private var allCache: List<Reminder> = emptyList()
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -36,35 +39,34 @@ class FolderDetailsFragment : Fragment() {
         val view = inflater.inflate(R.layout.fragment_folder_details, container, false)
 
         viewModel = ViewModelProvider(requireActivity())[CategoryViewModel::class.java]
+        rwm = ViewModelProvider(requireActivity())[ReminderViewModel::class.java]
         categoryIndex = arguments?.getInt("category_index") ?: -1
 
-        val category = viewModel.categories.value?.getOrNull(categoryIndex)
-        val categoryName = category?.name ?: "(unknown)"
-
         categoryTitle = view.findViewById(R.id.categoryTitle)
+
+        val categoryName = viewModel.categories.value
+            ?.getOrNull(categoryIndex)
+            ?.name ?: "(unknown)"
         categoryTitle.text = categoryName
 
         reminderRecycler = view.findViewById(R.id.reminderRecycler)
         reminderRecycler.layoutManager = LinearLayoutManager(requireContext())
 
-        val rem = mutableListOf<Reminder>()
-        lifecycleScope.launch(Dispatchers.IO) {
-            ReminderRepositoryTest().getAll().collect {
-                it.forEach { reminder ->
-                    if(reminder.category == categoryName){
-                        rem.add(reminder)
-                    }
-                }
+        reminderAdapter = ReminderAdapter(mutableListOf())
+        reminderRecycler.adapter = reminderAdapter
+
+        // firestore
+        viewLifecycleOwner.lifecycleScope.launch {
+            rwm.reminders.collect { all ->
+                allCache = all
+                renderReminders()
             }
         }
 
-        reminderAdapter = ReminderAdapter(rem)
-        reminderRecycler.adapter = reminderAdapter
-
         // Keep list in this folder synced with global tasks
-        LocalReminderRepository.reminders.observe(viewLifecycleOwner) {
-            refreshReminders()
-        }
+//        LocalReminderRepository.reminders.observe(viewLifecycleOwner) {
+//            refreshReminders()
+//        }
 
         view.findViewById<ImageButton>(R.id.backButton).setOnClickListener {
             findNavController().navigateUp()
@@ -85,13 +87,12 @@ class FolderDetailsFragment : Fragment() {
                 TaskDialog.show(
                     fragment = this,
                     presetCategory = catName,
-                    onSave = { task -> LocalReminderRepository.add(task) }
+                    onSave = { task -> rwm.add(task) }
                 )
             }
 
         // initial load
-        refreshReminders()
-
+//        refreshReminders()
         return view
     }
 
@@ -100,10 +101,8 @@ class FolderDetailsFragment : Fragment() {
             ?.getOrNull(categoryIndex)
             ?.name ?: return
 
-        val all = LocalReminderRepository.reminders.value ?: emptyList()
-        val filtered = all.filter { it.category == categoryName }
-
-        reminderAdapter.updateData(newList = filtered)
+        val filtered = allCache.filter { it.category == categoryName }
+        reminderAdapter.updateData(filtered)
     }
 
     private fun showEditCategoryDialog() {
@@ -135,9 +134,10 @@ class FolderDetailsFragment : Fragment() {
         }
 
         saveBtn.setOnClickListener {
-            val newName = nameField.text.toString().ifBlank { "Untitled" }
+            val newName = nameField.text.toString().trim().ifBlank { "Untitled" }
             viewModel.updateCategory(categoryIndex, newName, selectedColor)
             categoryTitle.text = newName
+            renderReminders()
             dialog.dismiss()
         }
 
@@ -208,12 +208,14 @@ class FolderDetailsFragment : Fragment() {
         override fun onBindViewHolder(holder: ReminderViewHolder, position: Int) {
             val r = reminders[position]
 
-            holder.text.text = "${r.date}: ${r.text}"
+            holder.text.text = "${r.date} ${r.time} • ${r.text}"
+            holder.checkBox.setOnCheckedChangeListener(null)
             holder.checkBox.isChecked = r.isDone
 
             holder.checkBox.setOnCheckedChangeListener { _, checked ->
-                r.isDone = checked
-                LocalReminderRepository.update(r)
+                // firestore
+                val updated = r.copy(isDone = checked)
+                rwm.add(updated)
             }
 
             // Edit uses the same TaskDialog
@@ -221,13 +223,13 @@ class FolderDetailsFragment : Fragment() {
                 TaskDialog.show(
                     fragment = this@FolderDetailsFragment,
                     existing = r,
-                    onSave = { updated -> LocalReminderRepository.update(updated) },
-                    onDelete = { LocalReminderRepository.delete(r) }
+                    onSave = { updated -> rwm.add(updated) },
+                    onDelete = { rwm.delete(r.id) }
                 )
             }
 
             holder.delete.setOnClickListener {
-                LocalReminderRepository.delete(r)
+                rwm.delete(r.id)
             }
         }
 
@@ -238,5 +240,12 @@ class FolderDetailsFragment : Fragment() {
             reminders.addAll(newList)
             notifyDataSetChanged()
         }
+
+    }
+
+    private fun renderReminders() {
+        val categoryName = viewModel.categories.value?.getOrNull(categoryIndex)?.name ?: return
+        val filtered = allCache.filter { it.category == categoryName }
+        reminderAdapter.updateData(filtered)
     }
 }

@@ -14,14 +14,17 @@ import android.widget.ArrayAdapter
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.honk.R
 import com.example.honk.local.LocalReminderRepository
 import com.example.honk.model.Reminder
 import com.example.honk.ui.categories.CategoryViewModel
+import com.example.honk.ui.dialogs.ReminderViewModel
 import com.example.honk.ui.dialogs.TaskDialog
 import com.google.android.material.floatingactionbutton.FloatingActionButton
+import kotlinx.coroutines.launch
 
 class NotesFragment : Fragment() {
 
@@ -29,9 +32,12 @@ class NotesFragment : Fragment() {
     private lateinit var adapter: NotesAdapter
     private lateinit var categoryViewModel: CategoryViewModel
 
+    private lateinit var rwm: ReminderViewModel
+
     private var activeDateFilter: String? = null
     private var activeCategoryFilter: String? = null
     private var activePriorityFilter: String? = null
+    private var allCache: List<Reminder> = emptyList()
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -41,6 +47,7 @@ class NotesFragment : Fragment() {
 
         categoryViewModel =
             ViewModelProvider(requireActivity())[CategoryViewModel::class.java]
+        rwm = ViewModelProvider(requireActivity())[ReminderViewModel::class.java]
 
         notesRecycler = view.findViewById(R.id.notesRecycler)
         notesRecycler.layoutManager = LinearLayoutManager(requireContext())
@@ -49,16 +56,23 @@ class NotesFragment : Fragment() {
         notesRecycler.adapter = adapter
 
         // Observe global reminder list
-        LocalReminderRepository.reminders.observe(viewLifecycleOwner, Observer {
-            applyFilters()
-        })
+        viewLifecycleOwner.lifecycleScope.launch {
+            rwm.reminders.collect { all ->
+                allCache = all
+                applyFilters()
+            }
+        }
+
+//        LocalReminderRepository.reminders.observe(viewLifecycleOwner, Observer {
+//            applyFilters()
+//        })
 
         // Add note (using TaskDialog)
         view.findViewById<FloatingActionButton>(R.id.fab_add_note)
             .setOnClickListener {
                 TaskDialog.show(
                     fragment = this,
-                    onSave = { task -> LocalReminderRepository.add(task) }
+                    onSave = { task -> rwm.add(task) }
                 )
             }
 
@@ -70,17 +84,23 @@ class NotesFragment : Fragment() {
 
     // FILTERING
     private fun applyFilters() {
-        val all = LocalReminderRepository.reminders.value ?: emptyList()
-
-        val filtered = all.filter { note ->
+//        val all = LocalReminderRepository.reminders.value ?: emptyList()
+//
+//        val filtered = all.filter { note ->
+//            val matchDate = activeDateFilter?.let { note.date == it } ?: true
+//            val matchCategory = activeCategoryFilter?.let {
+//                note.category.equals(it, ignoreCase = true)
+//            } ?: true
+//            val matchPriority = activePriorityFilter?.let {
+//                note.priority.equals(it, ignoreCase = true)
+//            } ?: true
+//
+//            matchDate && matchCategory && matchPriority
+//        }
+        val filtered = allCache.filter { note ->
             val matchDate = activeDateFilter?.let { note.date == it } ?: true
-            val matchCategory = activeCategoryFilter?.let {
-                note.category.equals(it, ignoreCase = true)
-            } ?: true
-            val matchPriority = activePriorityFilter?.let {
-                note.priority.equals(it, ignoreCase = true)
-            } ?: true
-
+            val matchCategory = activeCategoryFilter?.let { note.category.equals(it, ignoreCase = true) } ?: true
+            val matchPriority = activePriorityFilter?.let { note.priority.equals(it, ignoreCase = true) } ?: true
             matchDate && matchCategory && matchPriority
         }
 
@@ -95,7 +115,7 @@ class NotesFragment : Fragment() {
         val prioritySpinner = dialogView.findViewById<Spinner>(R.id.filterPrioritySpinner)
         val applyButton = dialogView.findViewById<Button>(R.id.applyFilterButton)
 
-        val list = LocalReminderRepository.reminders.value ?: emptyList()
+        val list = allCache
 
         val dates = listOf("All") + list.map { it.date }.distinct()
         val categories = listOf("All") + list.map { it.category }.filter { it.isNotBlank() }.distinct()
@@ -146,20 +166,22 @@ class NotesFragment : Fragment() {
 
             holder.checkBox.setOnCheckedChangeListener { _, checked ->
                 note.isDone = checked
-                LocalReminderRepository.update(note)
+//                LocalReminderRepository.update(note)
+                rwm.add(note)
             }
 
             holder.edit.setOnClickListener {
                 TaskDialog.show(
                     fragment = this@NotesFragment,
                     existing = note,
-                    onSave = { LocalReminderRepository.update(it) },
-                    onDelete = { LocalReminderRepository.delete(note) }
+                    onSave = { updated -> rwm.add(updated) },
+                    onDelete = { rwm.delete(note.id) }
                 )
             }
 
             holder.delete.setOnClickListener {
-                LocalReminderRepository.delete(note)
+//                LocalReminderRepository.delete(note)
+                rwm.delete(note.id)
             }
         }
 

@@ -14,16 +14,19 @@ import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.honk.R
 import com.example.honk.repository.ReminderRepositoryTest
+import com.example.honk.ui.dialogs.ReminderViewModel
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import java.util.Locale
 
 class CategoriesFragment : Fragment() {
 
     private lateinit var recycler: RecyclerView
     private lateinit var adapter: CategoryAdapter
     private lateinit var viewModel: CategoryViewModel
-    private var reminderRepo = ReminderRepositoryTest()
+    // private var reminderRepo = ReminderRepositoryTest()
+    private lateinit var rwm: ReminderViewModel
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -32,6 +35,7 @@ class CategoriesFragment : Fragment() {
         val view = inflater.inflate(R.layout.fragment_categories, container, false)
 
         viewModel = ViewModelProvider(requireActivity())[CategoryViewModel::class.java]
+        rwm = ViewModelProvider(requireActivity())[ReminderViewModel::class.java]
 
         recycler = view.findViewById(R.id.categoriesRecycler)
         recycler.layoutManager = GridLayoutManager(requireContext(), 2)
@@ -43,49 +47,65 @@ class CategoriesFragment : Fragment() {
             adapter.updateData(updated)
         }
 
-        if (viewModel.categories.value.isNullOrEmpty()) {
-            var newCategories = mutableListOf<Category>()
-            lifecycleScope.launch(Dispatchers.IO) {
-                reminderRepo.getAll().collect {
-                    it.forEach { reminder ->
-                        if(viewModel.contains(reminder.category)){
-                            return@forEach
-                        }
+        // firestore
+        viewLifecycleOwner.lifecycleScope.launch {
+            rwm.reminders.collect { reminders ->
+                val names = reminders
+                    .map { it.category.trim() }
+                    .filter { it.isNotBlank() }
+                    .distinct()
 
-                        var color: Int
-                        when (reminder.category) {
-                            "SCHOOL" -> {
-                                color = R.color.category_red
-                            }
-
-                            "PETS" -> {
-                                color = R.color.category_green
-                            }
-
-                            "HOLIDAY" -> {
-                                color = R.color.category_yellow
-                            }
-
-                            "WORK" -> {
-                                color = R.color.category_blue
-                            }
-
-                            else -> {
-                                color = 0
-                            }
-                        }
-                        newCategories.add(Category(reminder.category, color))
+                names.forEach { name ->
+                    if (!viewModel.contains(name)) {
+                        viewModel.addCategory(Category(name, colorFor(name)))
                     }
                 }
-                for (category in newCategories) {
-                    viewModel.addCategory(Category(category.name, category.color))
-                }
             }
-            if (!viewModel.contains("SCHOOL")) viewModel.addCategory(Category("SCHOOL", R.color.category_red))
-            if (!viewModel.contains("PETS")) viewModel.addCategory(Category("PETS", R.color.category_green))
-            if (!viewModel.contains("HOLIDAY")) viewModel.addCategory(Category("HOLIDAY", R.color.category_yellow))
-            if (!viewModel.contains("WORK")) viewModel.addCategory(Category("WORK", R.color.category_blue))
         }
+
+//        if (viewModel.categories.value.isNullOrEmpty()) {
+//            var newCategories = mutableListOf<Category>()
+//            lifecycleScope.launch(Dispatchers.IO) {
+//                reminderRepo.getAll().collect {
+//                    it.forEach { reminder ->
+//                        if(viewModel.contains(reminder.category)){
+//                            return@forEach
+//                        }
+//
+//                        var color: Int
+//                        when (reminder.category) {
+//                            "SCHOOL" -> {
+//                                color = R.color.category_red
+//                            }
+//
+//                            "PETS" -> {
+//                                color = R.color.category_green
+//                            }
+//
+//                            "HOLIDAY" -> {
+//                                color = R.color.category_yellow
+//                            }
+//
+//                            "WORK" -> {
+//                                color = R.color.category_blue
+//                            }
+//
+//                            else -> {
+//                                color = 0
+//                            }
+//                        }
+//                        newCategories.add(Category(reminder.category, color))
+//                    }
+//                }
+//                for (category in newCategories) {
+//                    viewModel.addCategory(Category(category.name, category.color))
+//                }
+//            }
+//            if (!viewModel.contains("SCHOOL")) viewModel.addCategory(Category("SCHOOL", R.color.category_red))
+//            if (!viewModel.contains("PETS")) viewModel.addCategory(Category("PETS", R.color.category_green))
+//            if (!viewModel.contains("HOLIDAY")) viewModel.addCategory(Category("HOLIDAY", R.color.category_yellow))
+//            if (!viewModel.contains("WORK")) viewModel.addCategory(Category("WORK", R.color.category_blue))
+//        }
 
         view.findViewById<FloatingActionButton>(R.id.fab_add_category)
             .setOnClickListener { showAddCategoryDialog() }
@@ -120,7 +140,9 @@ class CategoriesFragment : Fragment() {
             val name = nameField.text.toString().ifBlank { "Untitled" }
 
             // save category with chosen color
-            viewModel.addCategory(Category(name, selectedColor))
+            if (!viewModel.contains(name)) {
+                viewModel.addCategory(Category(name, selectedColor))
+            }
             dialog.dismiss()
         }
 
@@ -143,14 +165,10 @@ class CategoriesFragment : Fragment() {
             }
         }
 
-        pickerView.findViewById<View>(R.id.colorRed)
-            .pick(R.color.category_red)
-        pickerView.findViewById<View>(R.id.colorGreen)
-            .pick(R.color.category_green)
-        pickerView.findViewById<View>(R.id.colorBlue)
-            .pick(R.color.category_blue)
-        pickerView.findViewById<View>(R.id.colorYellow)
-            .pick(R.color.category_yellow)
+        pickerView.findViewById<View>(R.id.colorRed).pick(R.color.category_red)
+        pickerView.findViewById<View>(R.id.colorGreen).pick(R.color.category_green)
+        pickerView.findViewById<View>(R.id.colorBlue).pick(R.color.category_blue)
+        pickerView.findViewById<View>(R.id.colorYellow).pick(R.color.category_yellow)
 
         dialog.show()
     }
@@ -193,6 +211,16 @@ class CategoriesFragment : Fragment() {
             data.clear()
             data.addAll(newData)
             notifyDataSetChanged()
+        }
+    }
+
+    private fun colorFor(name: String): Int {
+        return when (name.uppercase(Locale.getDefault())) {
+            "SCHOOL" -> requireContext().getColor(R.color.category_red)
+            "PETS" -> requireContext().getColor(R.color.category_green)
+            "HOLIDAY" -> requireContext().getColor(R.color.category_yellow)
+            "WORK" -> requireContext().getColor(R.color.category_blue)
+            else -> requireContext().getColor(R.color.category_blue)
         }
     }
 }
