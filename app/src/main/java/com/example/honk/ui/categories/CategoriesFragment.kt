@@ -8,17 +8,22 @@ import android.widget.*
 import androidx.appcompat.app.AlertDialog
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.honk.R
+import com.example.honk.repository.ReminderRepositoryTest
 import com.google.android.material.floatingactionbutton.FloatingActionButton
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
 class CategoriesFragment : Fragment() {
 
     private lateinit var recycler: RecyclerView
     private lateinit var adapter: CategoryAdapter
     private lateinit var viewModel: CategoryViewModel
+    private var reminderRepo = ReminderRepositoryTest()
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -39,12 +44,47 @@ class CategoriesFragment : Fragment() {
         }
 
         if (viewModel.categories.value.isNullOrEmpty()) {
-            viewModel.categories.value = mutableListOf(
-                Category("SCHOOL", R.color.category_red),
-                Category("PETS", R.color.category_green),
-                Category("HOLIDAY", R.color.category_yellow),
-                Category("WORK", R.color.category_blue)
-            )
+            var newCategories = mutableListOf<Category>()
+            lifecycleScope.launch(Dispatchers.IO) {
+                reminderRepo.getAll().collect {
+                    it.forEach { reminder ->
+                        if(viewModel.contains(reminder.category)){
+                            return@forEach
+                        }
+
+                        var color: Int
+                        when (reminder.category) {
+                            "SCHOOL" -> {
+                                color = R.color.category_red
+                            }
+
+                            "PETS" -> {
+                                color = R.color.category_green
+                            }
+
+                            "HOLIDAY" -> {
+                                color = R.color.category_yellow
+                            }
+
+                            "WORK" -> {
+                                color = R.color.category_blue
+                            }
+
+                            else -> {
+                                color = 0
+                            }
+                        }
+                        newCategories.add(Category(reminder.category, color))
+                    }
+                }
+                for (category in newCategories) {
+                    viewModel.addCategory(Category(category.name, category.color))
+                }
+            }
+            if (!viewModel.contains("SCHOOL")) viewModel.addCategory(Category("SCHOOL", R.color.category_red))
+            if (!viewModel.contains("PETS")) viewModel.addCategory(Category("PETS", R.color.category_green))
+            if (!viewModel.contains("HOLIDAY")) viewModel.addCategory(Category("HOLIDAY", R.color.category_yellow))
+            if (!viewModel.contains("WORK")) viewModel.addCategory(Category("WORK", R.color.category_blue))
         }
 
         view.findViewById<FloatingActionButton>(R.id.fab_add_category)

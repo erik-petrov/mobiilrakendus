@@ -23,6 +23,17 @@ class CategoryViewModel : ViewModel() {
         }
     }
 
+    fun contains(categoryName: String): Boolean{
+        categories.value?.let{
+            it.forEach { category ->
+                if(category.name == categoryName){
+                    return true
+                }
+            }
+        }
+        return false
+    }
+
     fun updateCategory(index: Int, newName: String, newColor: Int) {
         categories.value?.let {
             if (index in it.indices) {
