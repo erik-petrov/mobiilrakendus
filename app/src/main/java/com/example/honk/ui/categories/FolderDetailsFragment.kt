@@ -8,14 +8,18 @@ import android.widget.*
 import androidx.appcompat.app.AlertDialog
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.honk.R
 import com.example.honk.local.LocalReminderRepository
 import com.example.honk.model.Reminder
+import com.example.honk.repository.ReminderRepositoryTest
 import com.example.honk.ui.dialogs.TaskDialog
 import com.google.android.material.floatingactionbutton.FloatingActionButton
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
 class FolderDetailsFragment : Fragment() {
 
@@ -43,7 +47,18 @@ class FolderDetailsFragment : Fragment() {
         reminderRecycler = view.findViewById(R.id.reminderRecycler)
         reminderRecycler.layoutManager = LinearLayoutManager(requireContext())
 
-        reminderAdapter = ReminderAdapter(mutableListOf())
+        val rem = mutableListOf<Reminder>()
+        lifecycleScope.launch(Dispatchers.IO) {
+            ReminderRepositoryTest().getAll().collect {
+                it.forEach { reminder ->
+                    if(reminder.category == categoryName){
+                        rem.add(reminder)
+                    }
+                }
+            }
+        }
+
+        reminderAdapter = ReminderAdapter(rem)
         reminderRecycler.adapter = reminderAdapter
 
         // Keep list in this folder synced with global tasks
